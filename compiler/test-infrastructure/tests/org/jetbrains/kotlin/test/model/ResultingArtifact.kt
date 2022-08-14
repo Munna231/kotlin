@@ -31,6 +31,10 @@ abstract class ResultingArtifact<A : ResultingArtifact<A>> {
         }
     }
 
+    abstract class KLibArtifactBase<I : KLibArtifactBase<I>> : ResultingArtifact<I>() {
+        abstract override val kind: KLibKind<I>
+    }
+
     abstract class Binary<A : Binary<A>> : ResultingArtifact<A>() {
         abstract override val kind: BinaryKind<A>
 

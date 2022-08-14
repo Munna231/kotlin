@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.test.model
 import org.jetbrains.kotlin.test.TargetBackend
 import org.jetbrains.kotlin.test.backend.classic.ClassicBackendInput
 import org.jetbrains.kotlin.test.backend.ir.IrBackendInput
+import org.jetbrains.kotlin.test.backend.ir.KLibArtifact
 import org.jetbrains.kotlin.test.frontend.classic.ClassicFrontendOutputArtifact
 import org.jetbrains.kotlin.test.frontend.fir.FirOutputArtifact
 
@@ -41,6 +42,10 @@ object BackendKinds {
         return if (targetBackend.isIR) IrBackend
         else ClassicBackend
     }
+}
+
+object KLibKinds {
+    object KLib : KLibKind<KLibArtifact>("KLib")
 }
 
 object ArtifactKinds {

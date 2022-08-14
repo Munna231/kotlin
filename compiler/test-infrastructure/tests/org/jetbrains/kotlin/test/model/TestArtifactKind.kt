@@ -23,6 +23,8 @@ abstract class FrontendKind<R : ResultingArtifact.FrontendOutput<R>>(representat
     }
 }
 
+abstract class KLibKind<I : ResultingArtifact.KLibArtifactBase<I>>(representation: String) : TestArtifactKind<I>(representation)
+
 abstract class BackendKind<I : ResultingArtifact.BackendInput<I>>(representation: String) : TestArtifactKind<I>(representation) {
     object NoBackend : BackendKind<ResultingArtifact.BackendInput.Empty>("NoBackend") {
         override val shouldRunAnalysis: Boolean

@@ -13,4 +13,6 @@ object ConfigurationDirectives : SimpleDirectivesContainer() {
     )
 
     val WITH_STDLIB by directive("Add Kotlin stdlib to classpath")
+
+    val USE_IR_LINKER by directive("Use IR linker")
 }

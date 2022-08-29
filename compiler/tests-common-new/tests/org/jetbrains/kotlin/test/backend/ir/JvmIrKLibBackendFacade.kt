@@ -7,11 +7,12 @@ package org.jetbrains.kotlin.test.backend.ir
 
 import org.jetbrains.kotlin.KtPsiSourceFile
 import org.jetbrains.kotlin.backend.common.BackendException
+import org.jetbrains.kotlin.backend.common.IrActualizer
 import org.jetbrains.kotlin.backend.jvm.MultifileFacadeFileEntry
 import org.jetbrains.kotlin.backend.jvm.lower.getFileClassInfoFromIrFile
 import org.jetbrains.kotlin.fileClasses.JvmFileClassUtil
 import org.jetbrains.kotlin.ir.PsiIrFileEntry
-import org.jetbrains.kotlin.ir.declarations.*
+import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.util.NaiveSourceBasedFileEntryImpl
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.test.backend.classic.JavaCompilerFacade
@@ -19,6 +20,7 @@ import org.jetbrains.kotlin.test.directives.CodegenTestDirectives
 import org.jetbrains.kotlin.test.model.*
 import org.jetbrains.kotlin.test.services.TestServices
 import org.jetbrains.kotlin.test.services.compilerConfigurationProvider
+import org.jetbrains.kotlin.test.services.dependencyProvider
 
 class JvmIrKLibBackendFacade(
     val testServices: TestServices,
@@ -37,6 +39,15 @@ class JvmIrKLibBackendFacade(
         require(inputArtifact is KLibArtifact.JvmIrKLibArtifact) {
             "JvmIrKLibBackendFacade expects KLibArtifact.JvmIrKLibArtifact as input"
         }
+
+        val dependencyProvider = testServices.dependencyProvider
+        val dependencies = module.dependsOnDependencies.map { dependency ->
+            val testModule = dependencyProvider.getTestModule(dependency.moduleName)
+            val artifact = dependencyProvider.getArtifact(testModule, KLibKinds.KLib)
+            artifact.irModuleFragment
+        }
+        IrActualizer.actualize(inputArtifact.irModuleFragment, dependencies)
+
         val state = inputArtifact.state
         try {
             inputArtifact.codegenFactory.generateModule(state, inputArtifact.backendInput)
@@ -76,7 +87,7 @@ class JvmIrKLibBackendFacade(
 
         return BinaryArtifacts.Jvm(
             state.factory,
-            inputArtifact.backendInput.irModuleFragment.files.flatMap {
+            inputArtifact.irModuleFragment.files.flatMap {
                 sourceFileInfos(it, allowNestedMultifileFacades = true)
             }
         )

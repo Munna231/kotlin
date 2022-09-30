@@ -114,6 +114,10 @@ class NativeCompilerDownloader(
             repo.metadataSources {
                 it.artifact()
             }
+            repo.mavenContent { desc ->
+                // Limit the modules to be used from this repository to kotlin-native only
+                desc.includeModule(KOTLIN_GROUP_ID, dependencyName)
+            }
         }
     }
 

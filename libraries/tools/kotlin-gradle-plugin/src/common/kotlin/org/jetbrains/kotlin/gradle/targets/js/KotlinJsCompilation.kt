@@ -9,13 +9,13 @@
 package org.jetbrains.kotlin.gradle.plugin.mpp
 
 import groovy.lang.Closure
+import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.TaskProvider
-import org.jetbrains.kotlin.gradle.dsl.*
-import org.jetbrains.kotlin.gradle.plugin.HasCompilerOptions
-import org.jetbrains.kotlin.gradle.plugin.KotlinCompilationWithResources
-import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
-import org.jetbrains.kotlin.gradle.plugin.PropertiesProvider
-import org.jetbrains.kotlin.gradle.plugin.mpp.compilationDetailsImpl.JsCompilationDetails
+import org.jetbrains.kotlin.gradle.dsl.CompilerJsOptions
+import org.jetbrains.kotlin.gradle.dsl.KotlinJsOptions
+import org.jetbrains.kotlin.gradle.plugin.*
+import org.jetbrains.kotlin.gradle.plugin.PropertiesProvider.Companion.kotlinPropertiesProvider
+import org.jetbrains.kotlin.gradle.plugin.mpp.compilationImpl.KotlinCompilationImpl
 import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsSubTargetContainerDsl
 import org.jetbrains.kotlin.gradle.targets.js.dukat.ExternalsOutputFormat
 import org.jetbrains.kotlin.gradle.targets.js.ir.JsBinary
@@ -24,29 +24,27 @@ import org.jetbrains.kotlin.gradle.targets.js.npm.PackageJson
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 import javax.inject.Inject
 
-abstract class KotlinJsCompilation @Inject internal constructor(
-    compilationDetails: JsCompilationDetails
-) : AbstractKotlinCompilationToRunnableFiles<KotlinJsOptions>(compilationDetails),
-    KotlinCompilationWithResources<KotlinJsOptions> {
-
-    final override val target: KotlinTarget get() = super.target
+open class KotlinJsCompilation @Inject internal constructor(
+    private val compilation: KotlinCompilationImpl
+) : InternalKotlinCompilation<KotlinJsOptions> by compilation.castKotlinOptionsType(),
+    KotlinCompilationToRunnableFiles<KotlinJsOptions> {
 
     @Suppress("UNCHECKED_CAST")
-    final override val compilerOptions: HasCompilerOptions<KotlinJsCompilerOptions>
-        get() = super.compilerOptions as HasCompilerOptions<KotlinJsCompilerOptions>
+    final override val compilerOptions: HasCompilerOptions<CompilerJsOptions>
+        get() = compilation.compilerOptions as HasCompilerOptions<CompilerJsOptions>
 
-    private val kotlinProperties = PropertiesProvider(target.project)
+    private val kotlinProperties = compilation.project.kotlinPropertiesProvider
 
     internal open val externalsOutputFormat: ExternalsOutputFormat
         get() = kotlinProperties.externalsOutputFormat ?: defaultExternalsOutputFormat
 
     internal open val defaultExternalsOutputFormat: ExternalsOutputFormat = ExternalsOutputFormat.SOURCE
 
-    val binaries: KotlinJsBinaryContainer =
-        target.project.objects.newInstance(
+    internal val binaries: KotlinJsBinaryContainer =
+        compilation.target.project.objects.newInstance(
             KotlinJsBinaryContainer::class.java,
-            target,
-            target.project.objects.domainObjectSet(JsBinary::class.java)
+            compilation.target,
+            compilation.target.project.objects.domainObjectSet(JsBinary::class.java)
         )
 
     var outputModuleName: String? = null
@@ -60,22 +58,33 @@ abstract class KotlinJsCompilation @Inject internal constructor(
             field = value
         }
 
+    @Deprecated("Use compilationName instead", ReplaceWith("compilationName"))
+    val compilationPurpose: String get() = compilationName
+
     override val processResourcesTaskName: String
         get() = disambiguateName("processResources")
 
     @Suppress("DEPRECATION")
     @Deprecated("Accessing task instance directly is deprecated", replaceWith = ReplaceWith("compileTaskProvider"))
     override val compileKotlinTask: Kotlin2JsCompile
-        get() = super.compileKotlinTask as Kotlin2JsCompile
+        get() = compilation.compileKotlinTask as Kotlin2JsCompile
 
     @Suppress("UNCHECKED_CAST", "DEPRECATION")
     @Deprecated("Replaced with compileTaskProvider", replaceWith = ReplaceWith("compileTaskProvider"))
     override val compileKotlinTaskProvider: TaskProvider<out Kotlin2JsCompile>
-        get() = super.compileKotlinTaskProvider as TaskProvider<out Kotlin2JsCompile>
+        get() = compilation.compileKotlinTaskProvider as TaskProvider<out Kotlin2JsCompile>
 
     @Suppress("UNCHECKED_CAST")
     override val compileTaskProvider: TaskProvider<Kotlin2JsCompile>
-        get() = super.compileTaskProvider as TaskProvider<Kotlin2JsCompile>
+        get() = compilation.compileTaskProvider as TaskProvider<Kotlin2JsCompile>
+
+    override val runtimeDependencyConfigurationName: String
+        get() = compilation.runtimeDependencyConfigurationName ?: error("Missing 'runtimeDependencyConfigurationName'")
+
+    override var runtimeDependencyFiles: FileCollection = compilation.runtimeDependencyFiles ?: error("Missing 'runtimeDependencyFiles'")
+
+    override val relatedConfigurationNames: List<String>
+        get() = compilation.relatedConfigurationNames
 
     internal val packageJsonHandlers = mutableListOf<PackageJson.() -> Unit>()
 

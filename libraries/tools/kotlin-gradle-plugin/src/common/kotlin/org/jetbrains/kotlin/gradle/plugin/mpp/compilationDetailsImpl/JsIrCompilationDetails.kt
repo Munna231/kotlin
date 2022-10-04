@@ -8,7 +8,6 @@ package org.jetbrains.kotlin.gradle.plugin.mpp.compilationDetailsImpl
 import org.jetbrains.kotlin.gradle.plugin.HasKotlinDependencies
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
-import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrCompilation
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
 import javax.inject.Inject
 
@@ -18,7 +17,7 @@ internal class JsIrCompilationDetails(
 
     override fun addSourcesToCompileTask(sourceSet: KotlinSourceSet, addAsCommonSources: Lazy<Boolean>) {
         super.addSourcesToCompileTask(sourceSet, addAsCommonSources)
-        (compilation as KotlinJsIrCompilation).allSources.add(sourceSet.kotlin)
+        //(compilation as KotlinJsIrCompilation).allSources.add(sourceSet.kotlin)
     }
 
     internal abstract class JsIrCompilationDependencyHolder @Inject constructor(target: KotlinTarget, compilationPurpose: String) :

@@ -15,10 +15,10 @@ import org.gradle.workers.WorkerExecutor
 import org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.parseCommandLineArguments
 import org.jetbrains.kotlin.compilerRunner.ArgumentUtils
-import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompilerOptionsDefault
+import org.jetbrains.kotlin.gradle.dsl.CompilerJsOptionsDefault
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.PropertiesProvider
-import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.KotlinCompilationData
 import org.jetbrains.kotlin.gradle.plugin.statistics.KotlinBuildStatsService
 import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsBinaryMode
 import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsBinaryMode.DEVELOPMENT
@@ -26,7 +26,6 @@ import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 import org.jetbrains.kotlin.gradle.utils.toHexString
 import org.jetbrains.kotlin.statistics.metrics.BooleanMetrics
 import org.jetbrains.kotlin.statistics.metrics.StringMetrics
-import org.jetbrains.kotlin.utils.tryConstructClassFromStringArgs
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
@@ -37,7 +36,7 @@ abstract class KotlinJsIrLink @Inject constructor(
     objectFactory: ObjectFactory,
     workerExecutor: WorkerExecutor
 ) : Kotlin2JsCompile(
-    objectFactory.newInstance(KotlinJsCompilerOptionsDefault::class.java),
+    objectFactory.newInstance(CompilerJsOptionsDefault::class.java),
     objectFactory,
     workerExecutor
 ) {
@@ -61,7 +60,7 @@ abstract class KotlinJsIrLink @Inject constructor(
 
     @Transient
     @get:Internal
-    internal lateinit var compilation: KotlinCompilationData<*>
+    internal lateinit var compilation: KotlinCompilation<*>
 
     @Transient
     @get:Internal

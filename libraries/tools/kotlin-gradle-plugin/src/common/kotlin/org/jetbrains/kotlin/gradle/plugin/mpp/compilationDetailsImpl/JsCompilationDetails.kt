@@ -14,7 +14,6 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.DefaultKotlinDependencyHandler
 import org.jetbrains.kotlin.gradle.targets.js.KotlinJsTarget
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
 import org.jetbrains.kotlin.gradle.utils.*
-import org.jetbrains.kotlin.gradle.utils.lowerCamelCaseName
 import javax.inject.Inject
 
 internal open class JsCompilationDetails(
@@ -41,7 +40,7 @@ internal open class JsCompilationDetails(
 
     internal abstract class JsCompilationDependenciesHolder @Inject constructor(
         val target: KotlinTarget,
-        val compilationPurpose: String
+        val compilationName: String
     ) : HasKotlinDependencies {
         override val apiConfigurationName: String
             get() = disambiguateNameInPlatform(API)
@@ -65,7 +64,7 @@ internal open class JsCompilationDetails(
         private fun disambiguateNameInPlatform(simpleName: String): String {
             return lowerCamelCaseName(
                 disambiguationClassifierInPlatform,
-                compilationPurpose.takeIf { it != KotlinCompilation.MAIN_COMPILATION_NAME },
+                compilationName.takeIf { it != KotlinCompilation.MAIN_COMPILATION_NAME },
                 "compilation",
                 simpleName
             )

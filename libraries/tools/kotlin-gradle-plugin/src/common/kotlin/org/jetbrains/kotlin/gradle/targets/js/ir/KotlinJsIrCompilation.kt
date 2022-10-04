@@ -10,8 +10,6 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.compilationImpl.KotlinCompilationI
 import org.jetbrains.kotlin.gradle.targets.js.dukat.ExternalsOutputFormat
 import javax.inject.Inject
 
-open class KotlinJsIrCompilation @Inject internal constructor(
-    compilation: KotlinCompilationImpl
-) : KotlinJsCompilation(compilation) {
+open class KotlinJsIrCompilation @Inject internal constructor(compilation: KotlinCompilationImpl) : KotlinJsCompilation(compilation) {
     override val externalsOutputFormat: ExternalsOutputFormat = ExternalsOutputFormat.SOURCE
 }

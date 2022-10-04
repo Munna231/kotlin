@@ -21,9 +21,9 @@ import java.util.concurrent.Callable
 import javax.inject.Inject
 
 abstract class AbstractKotlinNativeCompilation internal constructor(
-    private val compilation: KotlinCompilationImpl,
+    compilation: KotlinCompilationImpl,
     val konanTarget: KonanTarget
-) : InternalKotlinCompilation<KotlinCommonOptions> by compilation.castKotlinOptionsType() {
+) : AbstractKotlinCompilation<KotlinCommonOptions>(compilation) {
 
     @Suppress("DEPRECATION")
     @Deprecated("Accessing task instance directly is deprecated", replaceWith = ReplaceWith("compileTaskProvider"))
@@ -48,7 +48,7 @@ abstract class AbstractKotlinNativeCompilation internal constructor(
 }
 
 open class KotlinNativeCompilation @Inject internal constructor(
-    konanTarget: KonanTarget, private val compilation: KotlinCompilationImpl,
+    konanTarget: KonanTarget, compilation: KotlinCompilationImpl,
 ) : AbstractKotlinNativeCompilation(compilation, konanTarget) {
 
     final override val target: KotlinNativeTarget
@@ -90,5 +90,4 @@ internal fun addSourcesToKotlinNativeCompileTask(
         task.setSource(sourceFiles)
         task.commonSources.from(project.files(Callable { if (addAsCommonSources.value) sourceFiles() else emptyList() }))
     }
-
 }

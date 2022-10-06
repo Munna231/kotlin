@@ -53,8 +53,7 @@ class KotlinJsModuleBuildTarget(kotlinContext: KotlinCompileContext, jpsModuleBu
 
     override val isIncrementalCompilationEnabled: Boolean
         get() = IncrementalCompilation.isEnabledForJs()
-    override val buildMetaInfoFactory
-        get() = JsBuildMetaInfo
+
     override val compilerArgumentsFileName: String
         get() = JS_BUILD_META_INFO_FILE_NAME
 

@@ -50,9 +50,6 @@ class KotlinUnsupportedModuleBuildTarget(
         shouldNotBeCalled()
     }
 
-    override val buildMetaInfoFactory: BuildMetaInfoFactory<BuildMetaInfo>
-        get() = shouldNotBeCalled()
-
     override val compilerArgumentsFileName: String
         get() = shouldNotBeCalled()
 }

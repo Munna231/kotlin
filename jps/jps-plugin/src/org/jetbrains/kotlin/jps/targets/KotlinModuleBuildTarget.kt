@@ -16,10 +16,9 @@ import org.jetbrains.jps.model.java.JpsJavaExtensionService
 import org.jetbrains.jps.model.module.JpsModule
 import org.jetbrains.jps.util.JpsPathUtil
 import org.jetbrains.kotlin.build.BuildMetaInfo
-import org.jetbrains.kotlin.build.BuildMetaInfoFactory
 import org.jetbrains.kotlin.build.GeneratedFile
+import org.jetbrains.kotlin.build.deserializeMapFromString
 import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
-import org.jetbrains.kotlin.cli.common.arguments.deserializeMapFromString
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.compilerRunner.JpsCompilerEnvironment
 import org.jetbrains.kotlin.config.*
@@ -332,8 +331,6 @@ abstract class KotlinModuleBuildTarget<BuildMetaInfoType : BuildMetaInfo> intern
     }
 
     abstract val compilerArgumentsFileName: String
-
-    abstract val buildMetaInfoFactory: BuildMetaInfoFactory<BuildMetaInfoType>
 
     fun isVersionChanged(chunk: KotlinChunk, compilerArgsMap: Map<String, String>): Boolean {
 //        TODO: aocherepanov: add rebuild reason

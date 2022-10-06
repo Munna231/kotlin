@@ -34,9 +34,6 @@ class KotlinCommonModuleBuildTarget(kotlinContext: KotlinCompileContext, jpsModu
     override val isIncrementalCompilationEnabled: Boolean
         get() = false
 
-    override val buildMetaInfoFactory
-        get() = CommonBuildMetaInfo
-
     override val compilerArgumentsFileName
         get() = COMMON_BUILD_META_INFO_FILE_NAME
 

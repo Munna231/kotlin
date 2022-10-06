@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.build
 
+import org.jetbrains.kotlin.cli.common.arguments.collectProperties
 import kotlin.reflect.KClass
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
@@ -68,4 +69,31 @@ fun <T : Any> deserializeFromPlainText(str: String, klass: KClass<T>): T? {
     }
 
     return primaryConstructor.call(*args.toTypedArray())
+}
+
+@Suppress("UNCHECKED_CAST")
+fun <T : Any> serializeArgs(args: T) =
+    collectProperties(args::class as KClass<T>, false)
+        .filter { property -> property.name !in filteredProperties }
+        .associateBy(
+            keySelector = { property -> property.name },
+            valueTransform = { property -> property.get(args).toString() })
+
+// TODO: aocherepanov: look throw
+val filteredProperties = listOf(
+    "asd"
+)
+
+fun <T : Any> serializeArgsToString(args: T) = serializeMapToString(serializeArgs(args))
+fun serializeMapToString(myList: Map<String, String>) = myList.map { "${it.key}=${it.value}" }.joinToString("\n")
+
+fun deserializeMapFromString(inputString: String) = inputString
+    .split("\n")
+    .filter(String::isNotBlank)
+    .associate { it.substringBefore("=") to it.substringAfter("=") }
+
+
+// TODO: aocherepanov: smart comparator?
+fun <T : Map<String, String>> T.compare(two: T): Boolean {
+    return this == two
 }

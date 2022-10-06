@@ -112,29 +112,3 @@ fun CommonCompilerArguments.setApiVersionToLanguageVersionIfNeeded() {
         apiVersion = languageVersion
     }
 }
-
-@Suppress("UNCHECKED_CAST")
-fun <From : Any> serializeArgs(args: From) =
-    collectProperties(args::class as KClass<From>, false)
-        .filter { property -> property.name !in filteredProperties }
-        .associateBy(
-            keySelector = { property -> property.name },
-            valueTransform = { property -> property.get(args).toString() })
-
-// TODO: aocherepanov: look throw
-val filteredProperties = listOf(
-    "asd"
-)
-
-fun <T : Any> serializeArgsToString(args: T) = serializeMapToString(serializeArgs(args))
-fun serializeMapToString(myList: Map<String, String>) = myList.map { "${it.key}=${it.value}" }.joinToString("\n")
-
-fun deserializeMapFromString(inputString: String) = inputString
-    .split("\n")
-    .filter(String::isNotBlank)
-    .associate { it.substringBefore("=") to it.substringAfter("=") }
-
-
-fun <T : Map<String, String>> T.compare(two: T): Boolean {
-    return this == two
-}

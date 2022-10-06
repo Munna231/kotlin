@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.build
 
+import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.collectProperties
 import kotlin.reflect.KClass
 import kotlin.reflect.full.memberProperties
@@ -39,12 +40,12 @@ inline fun <reified T : Any> deserializeFromPlainText(str: String): T? = deseria
 fun <T : Any> deserializeFromPlainText(str: String, klass: KClass<T>): T? {
     val args = ArrayList<Any?>()
     val properties = str
-            .split("\n")
-            .filter(String::isNotBlank)
-            .associate { it.substringBefore("=") to it.substringAfter("=") }
+        .split("\n")
+        .filter(String::isNotBlank)
+        .associate { it.substringBefore("=") to it.substringAfter("=") }
 
     val primaryConstructor = klass.primaryConstructor
-                             ?: throw IllegalStateException("${klass.java} does not have primary constructor")
+        ?: throw IllegalStateException("${klass.java} does not have primary constructor")
     for (param in primaryConstructor.parameters.sortedBy { it.index }) {
         val argumentString = properties[param.name]
 
@@ -52,8 +53,7 @@ fun <T : Any> deserializeFromPlainText(str: String, klass: KClass<T>): T? {
             if (param.type.isMarkedNullable) {
                 args.add(null)
                 continue
-            }
-            else {
+            } else {
                 return null
             }
         }
@@ -71,20 +71,8 @@ fun <T : Any> deserializeFromPlainText(str: String, klass: KClass<T>): T? {
     return primaryConstructor.call(*args.toTypedArray())
 }
 
-@Suppress("UNCHECKED_CAST")
-fun <T : Any> serializeArgs(args: T) =
-    collectProperties(args::class as KClass<T>, false)
-        .filter { property -> property.name !in filteredProperties }
-        .associateBy(
-            keySelector = { property -> property.name },
-            valueTransform = { property -> property.get(args).toString() })
+fun serializeArgsToString(args: CommonCompilerArguments) = serializeMapToString(transformClassToPropertiesMap(args, excludedProperties))
 
-// TODO: aocherepanov: look throw
-val filteredProperties = listOf(
-    "asd"
-)
-
-fun <T : Any> serializeArgsToString(args: T) = serializeMapToString(serializeArgs(args))
 fun serializeMapToString(myList: Map<String, String>) = myList.map { "${it.key}=${it.value}" }.joinToString("\n")
 
 fun deserializeMapFromString(inputString: String) = inputString
@@ -92,6 +80,18 @@ fun deserializeMapFromString(inputString: String) = inputString
     .filter(String::isNotBlank)
     .associate { it.substringBefore("=") to it.substringAfter("=") }
 
+@Suppress("UNCHECKED_CAST")
+fun <T : Any> transformClassToPropertiesMap(classToTransform: T, excludedProperties: List<String> = emptyList()) =
+    collectProperties(classToTransform::class as KClass<T>, false)
+        .filter { property -> property.name !in excludedProperties }
+        .associateBy(
+            keySelector = { property -> property.name },
+            valueTransform = { property -> property.get(classToTransform).toString() })
+
+// TODO: aocherepanov: look throw
+val excludedProperties = listOf(
+    "asd"
+)
 
 // TODO: aocherepanov: smart comparator?
 fun <T : Map<String, String>> T.compare(two: T): Boolean {

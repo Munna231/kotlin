@@ -9,7 +9,8 @@ import org.jetbrains.jps.incremental.ModuleBuildTarget
 import org.jetbrains.jps.model.java.JpsJavaClasspathKind
 import org.jetbrains.jps.model.java.JpsJavaExtensionService
 import org.jetbrains.jps.model.module.JpsModuleDependency
-import org.jetbrains.kotlin.build.serializeArgs
+import org.jetbrains.kotlin.build.excludedProperties
+import org.jetbrains.kotlin.build.transformClassToPropertiesMap
 import org.jetbrains.kotlin.build.serializeArgsToString
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.LanguageVersion
@@ -141,7 +142,7 @@ class KotlinChunk internal constructor(val context: KotlinCompileContext, val ta
     }
 
     fun shouldRebuild(): Boolean {
-        val compilerArgumentsMap = serializeArgs(compilerArguments)
+        val compilerArgumentsMap = transformClassToPropertiesMap(compilerArguments, excludedProperties)
         targets.forEach { target ->
             if (target.isVersionChanged(this, compilerArgumentsMap)) {
                 KotlinBuilder.LOG.info("$target version changed, rebuilding $this")

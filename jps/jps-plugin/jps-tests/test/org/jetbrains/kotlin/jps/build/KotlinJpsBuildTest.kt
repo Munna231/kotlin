@@ -751,7 +751,7 @@ open class KotlinJpsBuildTest : KotlinJpsBuildTestBase() {
                 override fun markedAsComplementaryFiles(files: Collection<File>) {}
                 override fun invalidOrUnusedCache(
                     chunk: KotlinChunk?,
-                    target: KotlinModuleBuildTarget?,
+                    target: KotlinModuleBuildTarget<*>?,
                     attributesDiff: CacheAttributesDiff<*>
                 ) {}
                 override fun addCustomMessage(message: String) {}

@@ -142,9 +142,8 @@ class KotlinChunk internal constructor(val context: KotlinCompileContext, val ta
     }
 
     fun shouldRebuild(): Boolean {
-        val compilerArgumentsMap = transformClassToPropertiesMap(compilerArguments, excludedProperties)
         targets.forEach { target ->
-            if (target.isVersionChanged(this, compilerArgumentsMap)) {
+            if (target.isVersionChanged(this, compilerArguments)) {
                 KotlinBuilder.LOG.info("$target version changed, rebuilding $this")
                 return true
             }

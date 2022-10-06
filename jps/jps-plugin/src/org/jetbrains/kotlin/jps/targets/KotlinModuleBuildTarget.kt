@@ -15,9 +15,7 @@ import org.jetbrains.jps.model.java.JpsJavaClasspathKind
 import org.jetbrains.jps.model.java.JpsJavaExtensionService
 import org.jetbrains.jps.model.module.JpsModule
 import org.jetbrains.jps.util.JpsPathUtil
-import org.jetbrains.kotlin.build.BuildMetaInfo
-import org.jetbrains.kotlin.build.GeneratedFile
-import org.jetbrains.kotlin.build.deserializeMapFromString
+import org.jetbrains.kotlin.build.*
 import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.compilerRunner.JpsCompilerEnvironment
@@ -40,6 +38,7 @@ import org.jetbrains.kotlin.modules.TargetId
 import org.jetbrains.kotlin.progress.CompilationCanceledException
 import org.jetbrains.kotlin.progress.CompilationCanceledStatus
 import org.jetbrains.kotlin.utils.addIfNotNull
+import org.jetbrains.kotlin.utils.doNothing
 import java.io.File
 import java.nio.file.Files
 
@@ -306,7 +305,7 @@ abstract class KotlinModuleBuildTarget<BuildMetaInfoType : BuildMetaInfo> intern
     )
 
     inner class SourcesToCompile(
-        sources: Collection<KotlinModuleBuildTarget.Source>,
+        sources: Collection<Source>,
         val removedFiles: Collection<File>
     ) {
         val allFiles = sources.map { it.file }
@@ -332,13 +331,17 @@ abstract class KotlinModuleBuildTarget<BuildMetaInfoType : BuildMetaInfo> intern
 
     abstract val compilerArgumentsFileName: String
 
-    fun isVersionChanged(chunk: KotlinChunk, compilerArgsMap: Map<String, String>): Boolean {
-//        TODO: aocherepanov: add rebuild reason
-//        KotlinBuilder.LOG.info("$reasonToRebuild. Performing non-incremental rebuild (kotlin only)")
+    fun isVersionChanged(chunk: KotlinChunk, compilerArguments: CommonCompilerArguments): Boolean {
+        fun printReasonToRebuild(reasonToRebuild: String) {
+            KotlinBuilder.LOG.info("$reasonToRebuild. Performing non-incremental rebuild (kotlin only)")
+        }
+
+        val currentCompilerArgumentsMap = transformClassToPropertiesMap(compilerArguments, excludedProperties)
+
         val file = chunk.compilerArgumentsFile(jpsModuleBuildTarget)
         if (Files.notExists(file)) return false
 
-        val prevCompilerArgsMap =
+        val previousCompilerArgsMap =
             try {
                 deserializeMapFromString(Files.newInputStream(file).bufferedReader().use { it.readText() })
             } catch (e: Exception) {
@@ -346,7 +349,27 @@ abstract class KotlinModuleBuildTarget<BuildMetaInfoType : BuildMetaInfo> intern
                 return false
             }
 
-        return prevCompilerArgsMap != compilerArgsMap
+
+        if (currentCompilerArgumentsMap.keys != previousCompilerArgsMap.keys) {
+            printReasonToRebuild("Compiler arguments version was changed")
+            return true
+        }
+
+        val changedCompilerArguments = currentCompilerArgumentsMap.mapNotNull {
+            if (previousCompilerArgsMap[it.key] != it.value) {
+                it.key
+            } else null
+        }
+        if (changedCompilerArguments.isNotEmpty()) {
+            val rebuildReason = when (changedCompilerArguments.size) {
+                1 -> "One if compiles arguments was changed: "
+                else -> "Some compiler arguments were changed: "
+            } + changedCompilerArguments.joinToReadableString()
+            printReasonToRebuild(rebuildReason)
+            return true
+        }
+
+        return false
     }
 
     private fun checkRepresentativeTarget(chunk: KotlinChunk) {

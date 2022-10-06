@@ -92,8 +92,3 @@ fun <T : Any> transformClassToPropertiesMap(classToTransform: T, excludedPropert
 val excludedProperties = listOf(
     "asd"
 )
-
-// TODO: aocherepanov: smart comparator?
-fun <T : Map<String, String>> T.compare(two: T): Boolean {
-    return this == two
-}

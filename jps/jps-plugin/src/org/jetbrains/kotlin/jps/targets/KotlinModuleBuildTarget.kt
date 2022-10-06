@@ -362,7 +362,7 @@ abstract class KotlinModuleBuildTarget<BuildMetaInfoType : BuildMetaInfo> intern
         }
         if (changedCompilerArguments.isNotEmpty()) {
             val rebuildReason = when (changedCompilerArguments.size) {
-                1 -> "One if compiles arguments was changed: "
+                1 -> "One of compiler arguments was changed: "
                 else -> "Some compiler arguments were changed: "
             } + changedCompilerArguments.joinToReadableString()
             printReasonToRebuild(rebuildReason)

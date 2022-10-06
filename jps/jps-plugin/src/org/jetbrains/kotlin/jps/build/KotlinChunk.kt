@@ -9,6 +9,8 @@ import org.jetbrains.jps.incremental.ModuleBuildTarget
 import org.jetbrains.jps.model.java.JpsJavaClasspathKind
 import org.jetbrains.jps.model.java.JpsJavaExtensionService
 import org.jetbrains.jps.model.module.JpsModuleDependency
+import org.jetbrains.kotlin.cli.common.arguments.serializeArgs
+import org.jetbrains.kotlin.cli.common.arguments.serializeArgsToString
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.jps.incremental.CacheStatus
@@ -139,10 +141,9 @@ class KotlinChunk internal constructor(val context: KotlinCompileContext, val ta
     }
 
     fun shouldRebuild(): Boolean {
-        val buildMetaInfo = representativeTarget.buildMetaInfoFactory.create(compilerArguments)
-
+        val compilerArgumentsMap = serializeArgs(compilerArguments)
         targets.forEach { target ->
-            if (target.isVersionChanged(this, buildMetaInfo)) {
+            if (target.isVersionChanged(this, compilerArgumentsMap)) {
                 KotlinBuilder.LOG.info("$target version changed, rebuilding $this")
                 return true
             }
@@ -157,10 +158,10 @@ class KotlinChunk internal constructor(val context: KotlinCompileContext, val ta
         return false
     }
 
-    fun buildMetaInfoFile(target: ModuleBuildTarget): Path = context.dataPaths
+    fun compilerArgumentsFile(target: ModuleBuildTarget): Path = context.dataPaths
         .getTargetDataRoot(target)
         .toPath()
-        .resolve(representativeTarget.buildMetaInfoFileName)
+        .resolve(representativeTarget.compilerArgumentsFileName)
 
     fun saveVersions() {
         context.ensureLookupsCacheAttributesSaved()
@@ -169,10 +170,9 @@ class KotlinChunk internal constructor(val context: KotlinCompileContext, val ta
             it.initialLocalCacheAttributesDiff.manager.writeVersion()
         }
 
-        val serializedMetaInfo = representativeTarget.buildMetaInfoFactory.serializeToString(compilerArguments)
-
+        val serializedCompilerArguments = serializeArgsToString(compilerArguments)
         targets.forEach { target ->
-            Files.newOutputStream(buildMetaInfoFile(target.jpsModuleBuildTarget)).bufferedWriter().use { it.append(serializedMetaInfo) }
+            Files.newOutputStream(compilerArgumentsFile(target.jpsModuleBuildTarget)).bufferedWriter().use { it.append(serializedCompilerArguments) }
         }
     }
 

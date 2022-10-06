@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.build.BuildMetaInfo
 import org.jetbrains.kotlin.build.BuildMetaInfoFactory
 import org.jetbrains.kotlin.build.GeneratedFile
 import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
+import org.jetbrains.kotlin.cli.common.arguments.deserializeMapFromString
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.compilerRunner.JpsCompilerEnvironment
 import org.jetbrains.kotlin.config.*
@@ -330,45 +331,25 @@ abstract class KotlinModuleBuildTarget<BuildMetaInfoType : BuildMetaInfo> intern
         }
     }
 
+    abstract val compilerArgumentsFileName: String
+
     abstract val buildMetaInfoFactory: BuildMetaInfoFactory<BuildMetaInfoType>
 
-    abstract val buildMetaInfoFileName: String
-
-    fun isVersionChanged(chunk: KotlinChunk, buildMetaInfo: BuildMetaInfo): Boolean {
-        val file = chunk.buildMetaInfoFile(jpsModuleBuildTarget)
+    fun isVersionChanged(chunk: KotlinChunk, compilerArgsMap: Map<String, String>): Boolean {
+//        TODO: add rebuild reason
+//        KotlinBuilder.LOG.info("$reasonToRebuild. Performing non-incremental rebuild (kotlin only)")
+        val file = chunk.compilerArgumentsFile(jpsModuleBuildTarget)
         if (Files.notExists(file)) return false
 
-        val prevBuildMetaInfo =
+        val prevCompilerArgsMap =
             try {
-                buildMetaInfoFactory.deserializeFromString(Files.newInputStream(file).bufferedReader().use { it.readText() })
-                    ?: return false
+                deserializeMapFromString(Files.newInputStream(file).bufferedReader().use { it.readText() })
             } catch (e: Exception) {
-                KotlinBuilder.LOG.error("Could not deserialize build meta info", e)
+                KotlinBuilder.LOG.error("Could not deserialize previous compiler arguments info", e)
                 return false
             }
 
-        val prevLangVersion = LanguageVersion.fromVersionString(prevBuildMetaInfo.languageVersionString)
-        val prevApiVersion = ApiVersion.parse(prevBuildMetaInfo.apiVersionString)
-
-        val reasonToRebuild = when {
-            chunk.langVersion != prevLangVersion -> "Language version was changed ($prevLangVersion -> ${chunk.langVersion})"
-            chunk.apiVersion != prevApiVersion -> "Api version was changed ($prevApiVersion -> ${chunk.apiVersion})"
-            prevLangVersion != LanguageVersion.KOTLIN_1_0 && prevBuildMetaInfo.isEAP && !buildMetaInfo.isEAP -> {
-                // If EAP->Non-EAP build with IC, then rebuild all kotlin
-                "Last build was compiled with EAP-plugin"
-            }
-            else -> PluginClasspathsComparator(
-                prevBuildMetaInfo.pluginClasspaths,
-                buildMetaInfo.pluginClasspaths
-            ).describeDifferencesOrNull()
-        }
-
-        if (reasonToRebuild != null) {
-            KotlinBuilder.LOG.info("$reasonToRebuild. Performing non-incremental rebuild (kotlin only)")
-            return true
-        }
-
-        return false
+        return prevCompilerArgsMap != compilerArgsMap
     }
 
     private fun checkRepresentativeTarget(chunk: KotlinChunk) {

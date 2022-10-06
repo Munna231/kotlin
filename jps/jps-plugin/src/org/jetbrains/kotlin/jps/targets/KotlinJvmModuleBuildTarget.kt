@@ -65,7 +65,7 @@ class KotlinJvmModuleBuildTarget(kotlinContext: KotlinCompileContext, jpsModuleB
     override val buildMetaInfoFactory
         get() = JvmBuildMetaInfo
 
-    override val buildMetaInfoFileName
+    override val compilerArgumentsFileName
         get() = JVM_BUILD_META_INFO_FILE_NAME
 
     override val targetId: TargetId

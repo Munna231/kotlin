@@ -113,3 +113,37 @@ fun CommonCompilerArguments.setApiVersionToLanguageVersionIfNeeded() {
     }
 }
 
+//@Suppress("UNCHECKED_CAST")
+//fun <From : Any> serializeArgs(from: From): Map<String, String> {
+//    val propertiesToCopy = collectProperties(from::class as KClass<From>, true)
+//
+//    return propertiesToCopy.filter { it.name !in filteredProperties }.associateBy(
+//        keySelector = { it.name },
+//        valueTransform = { it.get(from).toString() }
+//    )
+//}
+
+@Suppress("UNCHECKED_CAST")
+fun <From : Any> serializeArgs(args: From) =
+    collectProperties(args::class as KClass<From>, false)
+        .filter { property -> property.name !in filteredProperties }
+        .associateBy(
+            keySelector = { property -> property.name },
+            valueTransform = { property -> property.get(args).toString() })
+
+val filteredProperties = listOf(
+    "asd"
+)
+
+fun <T : Any> serializeArgsToString(args: T) = serializeMapToString(serializeArgs(args))
+fun serializeMapToString(myList: Map<String, String>) = myList.map { "${it.key}=${it.value}" }.joinToString("\n")
+
+fun deserializeMapFromString(inputString: String) = inputString
+    .split("\n")
+    .filter(String::isNotBlank)
+    .associate { it.substringBefore("=") to it.substringAfter("=") }
+
+
+fun <T : Map<String, String>> T.compare(two: T): Boolean {
+    return this == two
+}

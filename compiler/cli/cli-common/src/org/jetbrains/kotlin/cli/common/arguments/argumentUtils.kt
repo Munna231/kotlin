@@ -113,16 +113,6 @@ fun CommonCompilerArguments.setApiVersionToLanguageVersionIfNeeded() {
     }
 }
 
-//@Suppress("UNCHECKED_CAST")
-//fun <From : Any> serializeArgs(from: From): Map<String, String> {
-//    val propertiesToCopy = collectProperties(from::class as KClass<From>, true)
-//
-//    return propertiesToCopy.filter { it.name !in filteredProperties }.associateBy(
-//        keySelector = { it.name },
-//        valueTransform = { it.get(from).toString() }
-//    )
-//}
-
 @Suppress("UNCHECKED_CAST")
 fun <From : Any> serializeArgs(args: From) =
     collectProperties(args::class as KClass<From>, false)
@@ -131,6 +121,7 @@ fun <From : Any> serializeArgs(args: From) =
             keySelector = { property -> property.name },
             valueTransform = { property -> property.get(args).toString() })
 
+// TODO: aocherepanov: look throw
 val filteredProperties = listOf(
     "asd"
 )

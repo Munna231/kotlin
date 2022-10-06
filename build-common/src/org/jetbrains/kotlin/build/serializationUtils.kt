@@ -20,24 +20,11 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 
-fun <T : Any> serializeToPlainText(instance: T): String = serializeToPlainText2(instance) //???
+inline fun <reified T : Any> serializeToPlainText(instance: T): String = serializeToPlainText(instance, T::class)
 
 fun <T : Any> serializeToPlainText(instance: T, klass: KClass<T>): String {
     val lines = ArrayList<String>()
     for (property in klass.memberProperties) {
-        val value = property.get(instance)
-        if (value != null) {
-            lines.add("${property.name}=$value")
-        }
-    }
-    return lines.joinToString("\n")
-}
-
-@Suppress("UNCHECKED_CAST")
-fun <T : Any> serializeToPlainText2(instance: T): String {
-    val klass1  = instance::class as KClass<T>
-    val lines = ArrayList<String>()
-    for (property in klass1.memberProperties) {
         val value = property.get(instance)
         if (value != null) {
             lines.add("${property.name}=$value")

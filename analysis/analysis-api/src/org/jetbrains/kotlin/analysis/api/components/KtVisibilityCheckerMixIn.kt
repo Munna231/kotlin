@@ -18,6 +18,8 @@ public abstract class KtVisibilityChecker : KtAnalysisSessionComponent() {
         position: PsiElement,
         receiverExpression: KtExpression?
     ): Boolean
+
+    public abstract fun isPublicApi(symbol: KtSymbolWithVisibility): Boolean
 }
 
 public interface KtVisibilityCheckerMixIn : KtAnalysisSessionMixIn {
@@ -28,5 +30,10 @@ public interface KtVisibilityCheckerMixIn : KtAnalysisSessionMixIn {
         position: PsiElement
     ): Boolean = withValidityAssertion {
         analysisSession.visibilityChecker.isVisible(candidateSymbol, useSiteFile, position, receiverExpression)
+    }
+
+    /* Returns true for effectively public symbols, including internal declarations with @PublishedApi annotation */
+    public fun isPublicApi(symbol: KtSymbolWithVisibility): Boolean = withValidityAssertion {
+        analysisSession.visibilityChecker.isPublicApi(symbol)
     }
 }

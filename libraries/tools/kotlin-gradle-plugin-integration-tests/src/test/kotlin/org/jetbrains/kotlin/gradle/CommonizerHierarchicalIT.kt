@@ -39,9 +39,9 @@ class CommonizerHierarchicalIT : BaseGradleIT() {
             }
 
             if (Os.canCompileWindows) {
-                build(":p1:compileWindowsMainKotlinMetadata") {
+                build(":p1:compileMingwMainKotlinMetadata") {
                     assertSuccessful()
-                    assertFileExists("p1/build/classes/kotlin/metadata/windowsMain/klib/p1_windowsMain.klib")
+                    assertFileExists("p1/build/classes/kotlin/metadata/mingwMain/klib/p1_mingwMain.klib")
                 }
             }
 
@@ -57,6 +57,12 @@ class CommonizerHierarchicalIT : BaseGradleIT() {
                 build(":p1:compileNativeMainKotlinMetadata") {
                     assertSuccessful()
                     assertFileExists("p1/build/classes/kotlin/metadata/nativeMain/klib/p1_nativeMain.klib")
+                    assertNoDuplicateLibraryWarning()
+                }
+
+                build(":p1:compileConcurrentMainKotlinMetadata") {
+                    assertSuccessful()
+                    assertFileExists("p1/build/classes/kotlin/metadata/concurrentMain/default")
                     assertNoDuplicateLibraryWarning()
                 }
             }

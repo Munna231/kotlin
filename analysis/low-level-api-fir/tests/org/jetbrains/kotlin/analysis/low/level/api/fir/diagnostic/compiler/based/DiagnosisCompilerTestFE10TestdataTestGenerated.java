@@ -10990,9 +10990,9 @@ public class DiagnosisCompilerTestFE10TestdataTestGenerated extends AbstractDiag
                 }
 
                 @Test
-                @TestMetadata("noContextReceiversOnInlineClasses.kt")
-                public void testNoContextReceiversOnInlineClasses() throws Exception {
-                    runTest("compiler/testData/diagnostics/tests/extensions/contextReceivers/noContextReceiversOnInlineClasses.kt");
+                @TestMetadata("noContextReceiversOnValueClasses.kt")
+                public void testNoContextReceiversOnValueClasses() throws Exception {
+                    runTest("compiler/testData/diagnostics/tests/extensions/contextReceivers/noContextReceiversOnValueClasses.kt", TransformersFunctions.getReplaceOptionalJvmInlineAnnotationWithUniversal());
                 }
 
                 @Test

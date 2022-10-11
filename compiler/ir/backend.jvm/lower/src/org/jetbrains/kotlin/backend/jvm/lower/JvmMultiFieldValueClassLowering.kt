@@ -608,16 +608,97 @@ private class JvmMultiFieldValueClassLowering(context: JvmBackendContext) : JvmV
                 .zipWithNext { start: Int, finish: Int -> replacement.explicitParameters.slice(start until finish) }
         )
         for (i in old2newList.indices) {
-            val (param, newParamList) = old2newList[i]
+            val (oldParameter, newParamList) = old2newList[i]
             when (val structure = parametersStructure[i]) {
+                is RegularMapping -> valueDeclarationsRemapper.registerReplacement(oldParameter, newParamList.single())
                 is MultiFieldValueClassMapping -> {
                     val mfvcNodeInstance = structure.rootMfvcNode.createInstanceFromValueDeclarationsAndBoxType(
                         structure.boxedType, newParamList
                     )
-                    valueDeclarationsRemapper.registerReplacement(param, mfvcNodeInstance)
+                    valueDeclarationsRemapper.registerReplacement(oldParameter, mfvcNodeInstance)
                 }
+            }
+        }
 
-                is RegularMapping -> valueDeclarationsRemapper.registerReplacement(param, newParamList.single())
+        withinScope(replacement) {
+            addDefaultArgumentsIfNeeded(original, replacement, old2newList, parametersStructure)
+        }
+    }
+
+    private fun addDefaultArgumentsIfNeeded(
+        original: IrFunction,
+        replacement: IrFunction,
+        old2newList: List<Pair<IrValueParameter, List<IrValueParameter>>>,
+        parametersStructure: List<RemappedParameter>
+    ) {
+        if (!original.valueParameters.any { it.defaultValue?.expression?.type?.needsMfvcFlattening() == true }) return
+        val variables = mutableListOf<IrVariable>()
+        val newParametersWithDefaultValues = mutableListOf<IrValueParameter>()
+
+        with(context.createJvmIrBuilder(replacement.symbol)) {
+            val block = irBlock {
+                for (i in old2newList.indices) {
+                    val (param, newParamList) = old2newList[i]
+                    val defaultValue = param.defaultValue?.expression ?: continue
+                    when (parametersStructure[i]) {
+                        is MultiFieldValueClassMapping -> {
+                            val currentVariables = flattenExpression(defaultValue).map { expr ->
+                                savableStandaloneVariableWithSetter(
+                                    expr,
+                                    origin = IrDeclarationOrigin.IR_TEMPORARY_VARIABLE,
+                                    saveVariable = ::variablesSaver,
+                                )
+                            }
+                            require(currentVariables.size == newParamList.size && newParamList.isNotEmpty()) {
+                                "Invalid flattening of\n${defaultValue.dump()}"
+                            }
+                            variables.addAll(currentVariables)
+                            newParametersWithDefaultValues.addAll(newParamList)
+                        }
+
+                        is RegularMapping -> {
+                            val newParameter = newParamList.single()
+                            val variable = savableStandaloneVariableWithSetter(
+                                defaultValue.transform(this@JvmMultiFieldValueClassLowering, null),
+                                origin = IrDeclarationOrigin.IR_TEMPORARY_VARIABLE,
+                                saveVariable = ::variablesSaver,
+                            )
+                            variables.add(variable)
+                            newParametersWithDefaultValues.add(newParameter)
+                        }
+                    }
+                }
+            }
+            require(block.statements.isNotEmpty()) { "Illegal block for:\n${original.dump()}" }
+            val newDefaultArguments = removeExtraSetVariablesFromExpressionList(block, variables)
+            val currentVariablesToAdd = variablesToAdd[replacement] ?: setOf()
+            val variablesToAddManually = buildSet {
+                newDefaultArguments.forEach {
+                    it.acceptVoid(object : IrElementVisitorVoid {
+                        override fun visitElement(element: IrElement) {
+                            element.acceptChildrenVoid(this)
+                        }
+
+                        override fun visitValueAccess(expression: IrValueAccessExpression) {
+                            val declaration = expression.symbol.owner
+                            if (declaration is IrVariable && declaration in currentVariablesToAdd) {
+                                add(declaration)
+                            }
+                            super.visitValueAccess(expression)
+                        }
+                    })
+                }
+            }
+            for ((newParameter, newDefaultArgument) in newParametersWithDefaultValues zip newDefaultArguments) {
+                newParameter.defaultValue = irExprBody(newDefaultArgument)
+            }
+            if (block.statements.isNotEmpty()) {
+                replacements.newDefaultArgumentsInitializationBlock[replacement] = (block as IrBlock).makeBodyWithAddedVariables(
+                    context = this@JvmMultiFieldValueClassLowering.context,
+                    variables = currentVariablesToAdd,
+                    symbol = replacement.symbol,
+                    predefinedBlocks = variablesToAddManually.associateWith { Block(block) }
+                ).statements
             }
         }
     }
@@ -1036,7 +1117,13 @@ private class JvmMultiFieldValueClassLowering(context: JvmBackendContext) : JvmV
             if (constructor.isPrimary && constructor.constructedClass.isMultiFieldValueClass &&
                 constructor.origin != JvmLoweredDeclarationOrigin.STATIC_MULTI_FIELD_VALUE_CLASS_CONSTRUCTOR
             ) {
-                val oldArguments = List(expression.valueArgumentsCount) { expression.getValueArgument(it) }
+                val oldArguments = List(expression.valueArgumentsCount) {
+                    expression.getValueArgument(it) ?: run {
+                        constructor.valueParameters[it].defaultValue?.expression
+                            ?.deepCopyWithSymbols()
+                            ?.patchDeclarationParents(currentDeclarationParent)
+                    }
+                }
                 require(rootNode.subnodes.size == oldArguments.size) {
                     "Old ${constructor.render()} must have ${rootNode.subnodes.size} arguments but got ${oldArguments.size}"
                 }
@@ -1148,45 +1235,56 @@ private class JvmMultiFieldValueClassLowering(context: JvmBackendContext) : JvmV
 private sealed class BlockOrBody {
     data class Body(val body: IrBody) : BlockOrBody()
     data class Block(val block: IrBlock) : BlockOrBody()
+
+    fun <T> map(f: (IrElement) -> T) = when (this) {
+        is Body -> f(body)
+        is Block -> f(block)
+    }
 }
 
 /**
  * Finds the most narrow block or body which contains all usages of each of the given variables
  */
-private fun findNearestBlocksForVariables(variables: Set<IrVariable>, body: IrBody): Map<IrVariable, BlockOrBody?> {
+private fun findNearestBlocksForVariables(
+    variables: Set<IrVariable>,
+    body: BlockOrBody,
+    predefinedBlocks: Map<IrVariable, BlockOrBody>
+): Map<IrVariable, BlockOrBody?> {
     val variableUsages = mutableMapOf<BlockOrBody, MutableSet<IrVariable>>()
     val childrenBlocks = mutableMapOf<BlockOrBody, MutableList<BlockOrBody>>()
 
-    body.acceptVoid(object : IrElementVisitorVoid {
-        private val stack = mutableListOf<BlockOrBody>()
-        override fun visitElement(element: IrElement) {
-            element.acceptChildren(this, null)
-        }
-
-        override fun visitBody(body: IrBody) {
-            currentStackElement()?.let { childrenBlocks.getOrPut(it) { mutableListOf() }.add(BlockOrBody.Body(body)) }
-            stack.add(BlockOrBody.Body(body))
-            super.visitBody(body)
-            require(stack.removeLast() == BlockOrBody.Body(body)) { "Invalid stack" }
-        }
-
-        override fun visitBlock(expression: IrBlock) {
-            childrenBlocks.getOrPut(currentStackElement()!!) { mutableListOf() }.add(Block(expression))
-            stack.add(Block(expression))
-            super.visitBlock(expression)
-            require(stack.removeLast() == Block(expression)) { "Invalid stack" }
-        }
-
-        private fun currentStackElement() = stack.lastOrNull()
-
-        override fun visitValueAccess(expression: IrValueAccessExpression) {
-            val valueDeclaration = expression.symbol.owner
-            if (valueDeclaration is IrVariable && valueDeclaration in variables) {
-                variableUsages.getOrPut(currentStackElement()!!) { mutableSetOf() }.add(valueDeclaration)
+    body.map { element ->
+        element.acceptVoid(object : IrElementVisitorVoid {
+            private val stack = mutableListOf<BlockOrBody>()
+            override fun visitElement(element: IrElement) {
+                element.acceptChildren(this, null)
             }
-            super.visitValueAccess(expression)
-        }
-    })
+
+            override fun visitBody(body: IrBody) {
+                currentStackElement()?.let { childrenBlocks.getOrPut(it) { mutableListOf() }.add(BlockOrBody.Body(body)) }
+                stack.add(BlockOrBody.Body(body))
+                super.visitBody(body)
+                require(stack.removeLast() == BlockOrBody.Body(body)) { "Invalid stack" }
+            }
+
+            override fun visitBlock(expression: IrBlock) {
+                currentStackElement()?.let { childrenBlocks.getOrPut(it) { mutableListOf() }.add(Block(expression)) }
+                stack.add(Block(expression))
+                super.visitBlock(expression)
+                require(stack.removeLast() == Block(expression)) { "Invalid stack" }
+            }
+
+            private fun currentStackElement() = stack.lastOrNull()
+
+            override fun visitValueAccess(expression: IrValueAccessExpression) {
+                val valueDeclaration = expression.symbol.owner
+                if (valueDeclaration is IrVariable && valueDeclaration in variables) {
+                    variableUsages.getOrPut(currentStackElement()!!) { mutableSetOf() }.add(valueDeclaration)
+                }
+                super.visitValueAccess(expression)
+            }
+        })
+    }
 
     fun dfs(currentBlock: BlockOrBody, variable: IrVariable): BlockOrBody? {
         if (variable in (variableUsages[currentBlock] ?: listOf())) return currentBlock
@@ -1198,7 +1296,7 @@ private fun findNearestBlocksForVariables(variables: Set<IrVariable>, body: IrBo
         }
     }
 
-    return variables.associateWith { dfs(BlockOrBody.Body(body), it) }
+    return variables.associateWith { predefinedBlocks[it] ?: dfs(body, it) }
 }
 
 private fun IrStatement.containsUsagesOf(variablesSet: Set<IrVariable>): Boolean {
@@ -1220,105 +1318,121 @@ private fun IrStatement.containsUsagesOf(variablesSet: Set<IrVariable>): Boolean
     return used
 }
 
+private fun IrBody.makeBodyWithAddedVariables(
+    context: JvmBackendContext,
+    variables: Set<IrVariable>,
+    symbol: IrSymbol,
+    predefinedBlocks: Map<IrVariable, BlockOrBody> = mapOf()
+) = BlockOrBody.Body(this).makeBodyWithAddedVariables(context, variables, symbol, predefinedBlocks) as IrBody
+
+private fun IrBlock.makeBodyWithAddedVariables(
+    context: JvmBackendContext,
+    variables: Set<IrVariable>,
+    symbol: IrSymbol,
+    predefinedBlocks: Map<IrVariable, BlockOrBody> = mapOf()
+) = BlockOrBody.Block(this).makeBodyWithAddedVariables(context, variables, symbol, predefinedBlocks) as IrBlock
+
 /**
  * Adds declarations of the variables to the most narrow possible block or body.
  * It adds them before the first usage within the block and inlines initialization of them when possible.
  */
-fun IrBody.makeBodyWithAddedVariables(
+private fun BlockOrBody.makeBodyWithAddedVariables(
     context: JvmBackendContext,
     variables: Set<IrVariable>,
-    symbol: IrSymbol
-): IrBody {
-    val nearestBlocks = findNearestBlocksForVariables(variables, this)
+    symbol: IrSymbol,
+    predefinedBlocks: Map<IrVariable, BlockOrBody> = mapOf(),
+): IrElement {
+    val nearestBlocks = findNearestBlocksForVariables(variables, this, predefinedBlocks)
     val containingVariables: Map<BlockOrBody, List<IrVariable>> = nearestBlocks.entries
         .mapNotNull { (k, v) -> if (v != null) k to v else null }
         .groupBy({ (_, v) -> v }, { (k, _) -> k })
-    return transform(object : IrElementTransformerVoid() {
-        private fun getFlattenedStatements(container: IrStatementContainer): Sequence<IrStatement> = sequence {
-            for (statement in container.statements) {
-                if (statement is IrStatementContainer) {
-                    yieldAll(getFlattenedStatements(statement))
-                } else {
-                    yield(statement)
+    return map {
+        it.transform(object : IrElementTransformerVoid() {
+            private fun getFlattenedStatements(container: IrStatementContainer): Sequence<IrStatement> = sequence {
+                for (statement in container.statements) {
+                    if (statement is IrStatementContainer) {
+                        yieldAll(getFlattenedStatements(statement))
+                    } else {
+                        yield(statement)
+                    }
                 }
             }
-        }
 
-        private fun removeFlattenedStatements(container: IrStatementContainer, toRemove: Int): Int {
-            var removed = 0
-            var removedDirectly = 0
-            for (statement in container.statements) {
-                require(removed <= toRemove) { "Removed: $removed, To remove: $toRemove" }
-                if (removed == toRemove) break
-                if (statement is IrStatementContainer) {
-                    val nestedRemoved = removeFlattenedStatements(statement, toRemove - removed)
-                    removed += nestedRemoved
-                    if (statement.statements.isEmpty()) {
+            private fun removeFlattenedStatements(container: IrStatementContainer, toRemove: Int): Int {
+                var removed = 0
+                var removedDirectly = 0
+                for (statement in container.statements) {
+                    require(removed <= toRemove) { "Removed: $removed, To remove: $toRemove" }
+                    if (removed == toRemove) break
+                    if (statement is IrStatementContainer) {
+                        val nestedRemoved = removeFlattenedStatements(statement, toRemove - removed)
+                        removed += nestedRemoved
+                        if (statement.statements.isEmpty()) {
+                            removedDirectly++
+                        }
+                    } else {
+                        removed++
                         removedDirectly++
                     }
-                } else {
-                    removed++
-                    removedDirectly++
                 }
+                require(removed <= toRemove) { "Removed: $removed, To remove: $toRemove" }
+                if (removedDirectly > 0) container.statements.replaceAll(container.statements.drop(removedDirectly))
+                return removed
             }
-            require(removed <= toRemove) { "Removed: $removed, To remove: $toRemove" }
-            if (removedDirectly > 0) container.statements.replaceAll(container.statements.drop(removedDirectly))
-            return removed
-        }
 
-        private fun replaceSetVariableWithInitialization(variables: List<IrVariable>, container: IrStatementContainer) {
-            val variablesSet = variables.toSet()
-            val statementsWithoutUsages = container.statements.takeWhile { !it.containsUsagesOf(variablesSet) }
-            container.statements.replaceAll(container.statements.drop(statementsWithoutUsages.size))
-            val values = buildList {
-                for ((variable, statement) in variables.asSequence() zip getFlattenedStatements(container)) {
-                    when {
-                        variable.initializer != null -> break
-                        statement !is IrSetValue -> break
-                        statement.symbol.owner != variable -> break
-                        else -> add(statement.value)
+            private fun replaceSetVariableWithInitialization(variables: List<IrVariable>, container: IrStatementContainer) {
+                val variablesSet = variables.toSet()
+                val statementsWithoutUsages = container.statements.takeWhile { !it.containsUsagesOf(variablesSet) }
+                container.statements.replaceAll(container.statements.drop(statementsWithoutUsages.size))
+                val values = buildList {
+                    for ((variable, statement) in variables.asSequence() zip getFlattenedStatements(container)) {
+                        when {
+                            variable.initializer != null -> break
+                            statement !is IrSetValue -> break
+                            statement.symbol.owner != variable -> break
+                            else -> add(statement.value)
+                        }
                     }
                 }
-            }
 
-            for ((variable, value) in variables zip values) {
-                variable.initializer = value
-            }
-            removeFlattenedStatements(container, values.size)
-            container.statements.addAll(0, statementsWithoutUsages + variables)
-        }
-
-        override fun visitBlock(expression: IrBlock): IrExpression {
-            containingVariables[Block(expression)]?.let {
-                expression.transformChildrenVoid()
-                replaceSetVariableWithInitialization(it, expression)
-                return expression
-            }
-            return super.visitBlock(expression)
-        }
-
-        override fun visitBlockBody(body: IrBlockBody): IrBody {
-            containingVariables[BlockOrBody.Body(body)]?.let {
-                body.transformChildrenVoid()
-                replaceSetVariableWithInitialization(it, body)
-                return body
-            }
-            return super.visitBlockBody(body)
-        }
-
-        override fun visitExpressionBody(body: IrExpressionBody): IrBody {
-            val lowering = this
-            containingVariables[BlockOrBody.Body(body)]?.takeIf { it.isNotEmpty() }?.let { bodyVars ->
-                val blockBody = context.createJvmIrBuilder(symbol).irBlockBody {
-                    +irReturn(body.expression.transform(lowering, null))
+                for ((variable, value) in variables zip values) {
+                    variable.initializer = value
                 }
-                blockBody.transformChildrenVoid()
-                replaceSetVariableWithInitialization(bodyVars, blockBody)
-                return blockBody
+                removeFlattenedStatements(container, values.size)
+                container.statements.addAll(0, statementsWithoutUsages + variables)
             }
-            return super.visitExpressionBody(body)
-        }
-    }, null)
+
+            override fun visitBlock(expression: IrBlock): IrExpression {
+                containingVariables[Block(expression)]?.let {
+                    expression.transformChildrenVoid()
+                    replaceSetVariableWithInitialization(it, expression)
+                    return expression
+                }
+                return super.visitBlock(expression)
+            }
+
+            override fun visitBlockBody(body: IrBlockBody): IrBody {
+                containingVariables[BlockOrBody.Body(body)]?.let {
+                    body.transformChildrenVoid()
+                    replaceSetVariableWithInitialization(it, body)
+                    return body
+                }
+                return super.visitBlockBody(body)
+            }
+
+            override fun visitExpressionBody(body: IrExpressionBody): IrBody {
+                val lowering = this
+                containingVariables[BlockOrBody.Body(body)]?.takeIf { it.isNotEmpty() }?.let { bodyVars ->
+                    return with(context.createJvmIrBuilder(symbol)) {
+                        val blockBody = irBlock { +body.expression.transform(lowering, null) }
+                        replaceSetVariableWithInitialization(bodyVars, blockBody)
+                        irExprBody(blockBody)
+                    }
+                }
+                return super.visitExpressionBody(body)
+            }
+        }, null)
+    }
 }
 
 private fun <T> MutableList<T>.replaceAll(replacement: List<T>) {

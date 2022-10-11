@@ -9,15 +9,11 @@ import org.jetbrains.kotlin.backend.common.BodyLoweringPass
 import org.jetbrains.kotlin.backend.common.CommonBackendContext
 import org.jetbrains.kotlin.backend.common.DeclarationTransformer
 import org.jetbrains.kotlin.backend.common.descriptors.synthesizedString
-import org.jetbrains.kotlin.backend.common.ir.*
+import org.jetbrains.kotlin.backend.common.ir.ValueRemapper
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
-import org.jetbrains.kotlin.descriptors.DescriptorVisibility
-import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
 import org.jetbrains.kotlin.ir.builders.*
 import org.jetbrains.kotlin.ir.builders.declarations.addValueParameter
-import org.jetbrains.kotlin.ir.builders.declarations.buildConstructor
-import org.jetbrains.kotlin.ir.builders.declarations.buildFun
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.expressions.impl.*
@@ -32,7 +28,6 @@ import org.jetbrains.kotlin.ir.types.makeNullable
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.ir.visitors.IrElementTransformerVoid
 import org.jetbrains.kotlin.ir.visitors.transformChildrenVoid
-import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.util.OperatorNameConventions
 
 // TODO: fix expect/actual default parameters
@@ -55,6 +50,8 @@ open class DefaultArgumentStubGenerator(
     }
 
     protected open fun IrFunction.resolveAnnotations(): List<IrConstructorCall> = copyAnnotations()
+
+    protected open fun IrStatementsBuilder<IrStatementContainer>.generateBeforeSourceCall(originalDeclaration: IrFunction): Unit = Unit
 
     protected open fun IrFunction.generateDefaultStubBody(originalDeclaration: IrFunction): IrBody {
         val newIrFunction = this
@@ -93,6 +90,10 @@ open class DefaultArgumentStubGenerator(
                 val intAnd = this@DefaultArgumentStubGenerator.context.ir.symbols.getBinaryOperator(
                     OperatorNameConventions.AND, context.irBuiltIns.intType, context.irBuiltIns.intType
                 )
+                +irComposite {
+                    generateBeforeSourceCall(originalDeclaration)
+                }.prepareToBeUsedIn(newIrFunction).transform(ValueRemapper(variables), null)
+
                 var sourceParameterIndex = -1
                 for (valueParameter in originalDeclaration.valueParameters) {
                     if (!valueParameter.isMovedReceiver()) {

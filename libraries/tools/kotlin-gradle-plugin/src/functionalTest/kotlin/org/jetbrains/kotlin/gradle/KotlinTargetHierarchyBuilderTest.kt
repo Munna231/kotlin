@@ -24,7 +24,7 @@ class KotlinTargetHierarchyBuilderTest {
 
         buildProjectWithMPP().multiplatformExtension.presets
 
-            //
+            // JS targets are special and therefore are only handled manually using `anyJs()`
             .filter { it !is KotlinJsTargetPreset }
             .filter { it !is KotlinJsIrTargetPreset }
             .filter { it !is KotlinWasmTargetPreset }

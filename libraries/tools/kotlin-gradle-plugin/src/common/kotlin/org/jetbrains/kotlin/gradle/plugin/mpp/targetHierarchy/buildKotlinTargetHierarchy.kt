@@ -33,7 +33,7 @@ private class KotlinTargetHierarchyBuilderImplContext(private val compilation: K
     fun build(node: KotlinTargetHierarchy.Node): KotlinTargetHierarchy? {
         return builtValues.getOrPut(node) {
             val builder = getOrCreateBuilder(node)
-            if (!builder.includes(compilation)) return@getOrPut null
+            if (compilation !in builder) return@getOrPut null
 
             /*
             Keep the hierarchy 'deduplicated'.
@@ -78,7 +78,7 @@ private class KotlinTargetHierarchyBuilderImpl(
         this.excludePredicate = { previousExcludePredicate(it) || predicate(it) }
     }
 
-    fun includes(compilation: KotlinCompilation<*>): Boolean {
+    operator fun contains(compilation: KotlinCompilation<*>): Boolean {
         /* Return eagerly, when compilation is explicitly excluded */
         if (excludePredicate(compilation)) return false
 
@@ -86,7 +86,7 @@ private class KotlinTargetHierarchyBuilderImpl(
         if (includePredicate(compilation)) return true
 
         /* Find any child that includes this compilation */
-        return childrenClosure.any { child -> child.includes(compilation) }
+        return childrenClosure.any { child -> compilation in child }
     }
 
     private inline fun addTargets(crossinline predicate: (KotlinTarget) -> Boolean) = addCompilations { predicate(it.target) }

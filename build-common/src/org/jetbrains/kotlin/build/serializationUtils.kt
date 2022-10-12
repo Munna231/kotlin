@@ -90,5 +90,56 @@ fun <T : Any> transformClassToPropertiesMap(classToTransform: T, excludedPropert
 
 // TODO: aocherepanov: look throw
 val excludedProperties = listOf(
-    "asd"
+    "backendThreads",
+    "buildFile",
+    "classpath",
+    "declarationsOutputPath",
+    "defaultScriptExtension",
+    "dumpDirectory",
+    "dumpOnlyFqName",
+    "dumpPerf",
+    "enableDebugMode",
+    "errors",
+    "expression",
+    "extraHelp",
+    "freeArgs",
+    "help",
+    "intellijPluginRoot",
+    "kotlinHome",
+    "listPhases",
+    "namesExcludedFromDumping",
+    "phasesToDump",
+    "phasesToDumpAfter",
+    "phasesToDumpBefore",
+    "profileCompilerCommand",
+    "profilePhases",
+    "renderInternalDiagnosticNames",
+    "repeatCompileModules",
+    "reportOutputFiles",
+    "reportPerf",
+    "script",
+    "scriptResolverEnvironment",
+    "scriptTemplates",
+    "suppressDeprecatedJvmTargetWarning",
+    "useFastJarFileSystem",
+    "verbose",
+    "verbosePhases",
+    "version"
+)
+
+val argumentsListForspecialCheck = listOf(
+    "allowAnyScriptsInSourceRoots",
+    "allowKotlinPackage",
+    "allowNoSourceFiles",
+    "allowResultReturnType",
+    "allowUnstableDependencies",
+    "enableJvmPreview",
+    "ignoreConstOptimizationErrors",
+    "noCheckActual",
+    "skipMetadataVersionCheck",
+    "skipPrereleaseCheck",
+    "suppressMissingBuiltinsError",
+    "suppressVersionWarnings",
+    "suppressWarnings"
+
 )

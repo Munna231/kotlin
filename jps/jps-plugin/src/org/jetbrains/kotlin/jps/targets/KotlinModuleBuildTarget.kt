@@ -38,7 +38,6 @@ import org.jetbrains.kotlin.modules.TargetId
 import org.jetbrains.kotlin.progress.CompilationCanceledException
 import org.jetbrains.kotlin.progress.CompilationCanceledStatus
 import org.jetbrains.kotlin.utils.addIfNotNull
-import org.jetbrains.kotlin.utils.doNothing
 import java.io.File
 import java.nio.file.Files
 
@@ -356,8 +355,13 @@ abstract class KotlinModuleBuildTarget<BuildMetaInfoType : BuildMetaInfo> intern
         }
 
         val changedCompilerArguments = currentCompilerArgumentsMap.mapNotNull {
-            if (previousCompilerArgsMap[it.key] != it.value) {
-                it.key
+            val key = it.key
+            val previousValue = previousCompilerArgsMap[it.key]
+            val currentValue = it.value
+            return@mapNotNull if (key in argumentsListForspecialCheck && previousValue == "true" && currentValue != "true") {
+                key
+            } else if (previousCompilerArgsMap[key] != currentValue) {
+                key
             } else null
         }
         if (changedCompilerArguments.isNotEmpty()) {

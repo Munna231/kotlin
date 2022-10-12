@@ -9,8 +9,8 @@ fun main(arg: Any) {
     val x = 57
     val value = myBuilder {
         doSmthng("one ")
-        a = <!TYPE_MISMATCH!>57<!>
-        a = <!TYPE_MISMATCH!>x<!>
+        a = <!TYPE_MISMATCH_WARNING!>57<!>
+        a = <!TYPE_MISMATCH_WARNING!>x<!>
         if (arg is String) {
             a = arg
         }

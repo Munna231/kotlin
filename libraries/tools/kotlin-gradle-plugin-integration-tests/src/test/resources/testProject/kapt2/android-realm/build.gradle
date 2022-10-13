@@ -16,6 +16,12 @@ buildscript {
     }
 }
 
+// workaround for com.android.tools.build:gradle:1.1.1 adding dependencies to the `compile` configuration
+configurations {
+    maybeCreate("compile")
+    implementation.extendsFrom(compile)
+}
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
@@ -23,7 +29,6 @@ apply plugin: 'realm-android'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "25.0.2"
     defaultConfig {
         applicationId 'io.realm.examples.kotlin'
         minSdkVersion 14

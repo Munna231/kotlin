@@ -72,20 +72,11 @@ object FirInlineClassDeclarationChecker : FirRegularClassChecker() {
         for (innerDeclaration in declaration.declarations) {
             when (innerDeclaration) {
                 is FirConstructor -> {
-                    when {
-                        innerDeclaration.isPrimary -> {
-                            primaryConstructor = innerDeclaration
-                            primaryConstructorParametersByName = innerDeclaration.valueParameters.associateBy { it.name }
-                            primaryConstructorParametersSymbolsSet =
-                                primaryConstructorParametersByName.map { (_, parameter) -> parameter.symbol }.toSet()
-                        }
-
-                        innerDeclaration.body != null -> {
-                            val body = innerDeclaration.body!!
-                            reporter.reportOn(
-                                body.source, FirErrors.SECONDARY_CONSTRUCTOR_WITH_BODY_INSIDE_VALUE_CLASS, context
-                            )
-                        }
+                    if (innerDeclaration.isPrimary) {
+                        primaryConstructor = innerDeclaration
+                        primaryConstructorParametersByName = innerDeclaration.valueParameters.associateBy { it.name }
+                        primaryConstructorParametersSymbolsSet =
+                            primaryConstructorParametersByName.map { (_, parameter) -> parameter.symbol }.toSet()
                     }
                 }
 

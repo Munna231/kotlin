@@ -15,7 +15,7 @@ FILE: withSuppression2.kt
         public final val i: R|kotlin/Int| = R|<local>/i|
             public get(): R|kotlin/Int|
 
-        @R|kotlin/Suppress|(names = vararg(String(SECONDARY_CONSTRUCTOR_WITH_BODY_INSIDE_VALUE_CLASS))) public constructor(): R|B| {
+        public constructor(): R|B| {
             this<R|B|>(Int(42))
             R|/foo|(this@R|/B|.R|/B.i|)
         }

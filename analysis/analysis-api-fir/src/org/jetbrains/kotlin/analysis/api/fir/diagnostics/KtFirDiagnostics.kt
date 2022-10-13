@@ -988,10 +988,6 @@ sealed class KtFirDiagnostic<PSI : PsiElement> : KtDiagnosticWithPsi<PSI> {
         abstract val name: String
     }
 
-    abstract class SecondaryConstructorWithBodyInsideValueClass : KtFirDiagnostic<PsiElement>() {
-        override val diagnosticClass get() = SecondaryConstructorWithBodyInsideValueClass::class
-    }
-
     abstract class InnerClassInsideValueClass : KtFirDiagnostic<KtDeclaration>() {
         override val diagnosticClass get() = InnerClassInsideValueClass::class
     }

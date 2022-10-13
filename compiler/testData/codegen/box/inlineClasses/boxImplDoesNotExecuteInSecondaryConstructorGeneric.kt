@@ -4,7 +4,6 @@
 
 OPTIONAL_JVM_INLINE_ANNOTATION
 value class IC<T: Int> private constructor(val i: T) {
-    @Suppress("SECONDARY_CONSTRUCTOR_WITH_BODY_INSIDE_VALUE_CLASS")
     constructor() : this(0 as T) {
         counter += 1
     }

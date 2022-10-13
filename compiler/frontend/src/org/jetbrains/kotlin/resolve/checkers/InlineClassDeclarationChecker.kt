@@ -249,15 +249,6 @@ class ReservedMembersAndConstructsForInlineClass : DeclarationChecker {
                     context.trace.report(Errors.RESERVED_MEMBER_INSIDE_VALUE_CLASS.on(nameIdentifier, functionName))
                 }
             }
-
-            is ConstructorDescriptor -> {
-                val secondaryConstructor = declaration as? KtSecondaryConstructor ?: return
-                val bodyExpression = secondaryConstructor.bodyExpression
-                if (secondaryConstructor.hasBlockBody() && bodyExpression is KtBlockExpression) {
-                    val lBrace = bodyExpression.lBrace ?: return
-                    context.trace.report(Errors.SECONDARY_CONSTRUCTOR_WITH_BODY_INSIDE_VALUE_CLASS.on(lBrace))
-                }
-            }
         }
     }
 }

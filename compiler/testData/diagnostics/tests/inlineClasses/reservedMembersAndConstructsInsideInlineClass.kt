@@ -1,3 +1,4 @@
+// FIR_IDENTICAL
 // !LANGUAGE: +InlineClasses, -JvmInlineValueClasses, +CustomEqualsInInlineClasses
 // !DIAGNOSTICS: -UNUSED_PARAMETER
 
@@ -39,7 +40,7 @@ inline class IC4(val s: String) : WithBox {
 }
 
 inline class IC5(val a: String) {
-    constructor(i: Int) : this(i.toString()) <!SECONDARY_CONSTRUCTOR_WITH_BODY_INSIDE_VALUE_CLASS!>{<!>
+    constructor(i: Int) : this(i.toString()) {
         TODO("something")
     }
 }

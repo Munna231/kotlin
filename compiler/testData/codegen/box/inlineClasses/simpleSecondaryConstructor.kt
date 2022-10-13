@@ -6,8 +6,6 @@
 // WORKS_WHEN_VALUE_CLASS
 // LANGUAGE: +ValueClasses
 
-@file:Suppress("SECONDARY_CONSTRUCTOR_WITH_BODY_INSIDE_VALUE_CLASS")
-
 OPTIONAL_JVM_INLINE_ANNOTATION
 value class Foo(val x: String) {
     constructor(y: Int) : this("OK") {

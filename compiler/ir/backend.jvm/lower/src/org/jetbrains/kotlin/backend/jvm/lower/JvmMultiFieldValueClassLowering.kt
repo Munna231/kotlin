@@ -379,7 +379,9 @@ private class JvmMultiFieldValueClassLowering(context: JvmBackendContext) : JvmV
         val rootNode = replacements.getRootMfvcNode(declaration)
         rootNode.replaceFields()
         declaration.declarations.removeIf { it is IrSimpleFunction && it.isMultiFieldValueClassFieldGetter && it.overriddenSymbols.isEmpty() }
-        declaration.declarations += rootNode.run { allUnboxMethods + listOf(boxMethod, specializedEqualsMethod) }
+        declaration.declarations += rootNode.run {
+            allUnboxMethods + listOfNotNull(boxMethod, specializedEqualsMethod.takeIf { createdNewSpecializedEqualsMethod })
+        }
         rootNode.replacePrimaryMultiFieldValueClassConstructor()
     }
 
@@ -853,11 +855,6 @@ private class JvmMultiFieldValueClassLowering(context: JvmBackendContext) : JvmV
                         leftClass.functions.single { it.isEquals(backendContext) }
                     }
                     +irCall(newEquals).apply {
-                        if (rightNode != null) {
-                            for ((index, typeArgument) in (rightArgument.type as IrSimpleType).arguments.withIndex()) {
-                                putTypeArgument(index, typeArgument.typeOrNull)
-                            }
-                        }
                         dispatchReceiver = leftArgument
                         putValueArgument(0, rightArgument)
                     }.transform(this@JvmMultiFieldValueClassLowering, null)

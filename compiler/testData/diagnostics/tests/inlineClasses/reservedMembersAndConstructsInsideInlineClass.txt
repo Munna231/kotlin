@@ -55,6 +55,42 @@ public final inline class IC5 {
     public open override /*1*/ /*synthesized*/ fun toString(): kotlin.String
 }
 
+public final inline class IC6 {
+    public constructor IC6(/*0*/ a: kotlin.String)
+    public final val a: kotlin.String
+    public final fun </*0*/ T> equals(/*0*/ other: IC6): kotlin.Boolean
+    public open override /*1*/ /*synthesized*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+    public open override /*1*/ /*synthesized*/ fun hashCode(): kotlin.Int
+    public open override /*1*/ /*synthesized*/ fun toString(): kotlin.String
+}
+
+public final inline class IC7</*0*/ T> {
+    public constructor IC7</*0*/ T>(/*0*/ a: kotlin.String)
+    public final val a: kotlin.String
+    public final fun equals(/*0*/ other: IC7<*>): kotlin.Boolean
+    public open override /*1*/ /*synthesized*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+    public open override /*1*/ /*synthesized*/ fun hashCode(): kotlin.Int
+    public open override /*1*/ /*synthesized*/ fun toString(): kotlin.String
+}
+
+public final inline class IC8</*0*/ T> {
+    public constructor IC8</*0*/ T>(/*0*/ a: kotlin.String)
+    public final val a: kotlin.String
+    public final fun equals(/*0*/ other: IC8<T>): kotlin.Boolean
+    public open override /*1*/ /*synthesized*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+    public open override /*1*/ /*synthesized*/ fun hashCode(): kotlin.Int
+    public open override /*1*/ /*synthesized*/ fun toString(): kotlin.String
+}
+
+public final inline class IC9</*0*/ T> {
+    public constructor IC9</*0*/ T>(/*0*/ a: kotlin.String)
+    public final val a: kotlin.String
+    public final fun equals(/*0*/ other: IC9<kotlin.String>): kotlin.Boolean
+    public open override /*1*/ /*synthesized*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+    public open override /*1*/ /*synthesized*/ fun hashCode(): kotlin.Int
+    public open override /*1*/ /*synthesized*/ fun toString(): kotlin.String
+}
+
 public interface WithBox {
     public abstract fun box(): kotlin.String
     public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean

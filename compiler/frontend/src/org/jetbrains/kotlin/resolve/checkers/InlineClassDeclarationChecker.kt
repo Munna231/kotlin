@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.resolve.calls.util.getResolvedCall
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameUnsafe
 import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperClassifiers
 import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.checker.SimpleClassicTypeSystemContext.typeConstructor
 import org.jetbrains.kotlin.types.typeUtil.isNothing
 import org.jetbrains.kotlin.types.typeUtil.isTypeParameter
 import org.jetbrains.kotlin.types.typeUtil.isUnit
@@ -165,13 +166,13 @@ object InlineClassDeclarationChecker : DeclarationChecker {
             context.trace.bindingContext.get(BindingContext.FUNCTION, declaration)
 
         fun isUntypedEquals(declaration: KtNamedFunction): Boolean = getFunctionDescriptor(declaration)?.overridesEqualsFromAny() ?: false
-        fun isTypedEquals(declaration: KtNamedFunction): Boolean = getFunctionDescriptor(declaration)?.isTypedEqualsInInlineClass() ?: false
+        fun isTypedEquals(declaration: KtNamedFunction): Boolean = getFunctionDescriptor(declaration)?.isTypedEqualsInValueClass() ?: false
         fun KtClass.namedFunctions() = declarations.filterIsInstance<KtNamedFunction>()
 
-        if (context.languageVersionSettings.supportsFeature(LanguageFeature.CustomEqualsInInlineClasses)) {
+        if (context.languageVersionSettings.supportsFeature(LanguageFeature.CustomEqualsInValueClasses)) {
             declaration.namedFunctions().singleOrNull { isUntypedEquals(it) }?.apply {
                 if (declaration.namedFunctions().none { isTypedEquals(it) }) {
-                    trace.report(Errors.INEFFICIENT_EQUALS_OVERRIDING_IN_INLINE_CLASS.on(this@apply, descriptor.name.asString()))
+                    trace.report(Errors.INEFFICIENT_EQUALS_OVERRIDING_IN_VALUE_CLASS.on(this@apply, descriptor.name.asString()))
                 }
             }
         }
@@ -241,12 +242,20 @@ class ReservedMembersAndConstructsForInlineClass : DeclarationChecker {
             is SimpleFunctionDescriptor -> {
                 val ktFunction = declaration as? KtFunction ?: return
                 val functionName = descriptor.name.asString()
+                val nameIdentifier = ktFunction.nameIdentifier ?: return
                 if (functionName in boxAndUnboxNames
                     || (functionName in equalsAndHashCodeNames
-                            && !context.languageVersionSettings.supportsFeature(LanguageFeature.CustomEqualsInInlineClasses))
+                            && !context.languageVersionSettings.supportsFeature(LanguageFeature.CustomEqualsInValueClasses))
                 ) {
-                    val nameIdentifier = ktFunction.nameIdentifier ?: return
                     context.trace.report(Errors.RESERVED_MEMBER_INSIDE_VALUE_CLASS.on(nameIdentifier, functionName))
+                } else if (descriptor.isTypedEqualsInValueClass()) {
+                    if (descriptor.typeParameters.isNotEmpty()) {
+                        context.trace.report(Errors.TYPE_PARAMETER_ON_TYPED_VALUE_CLASS_EQUALS.on(declaration.typeParameterList!!))
+                    }
+                    val parameterType = descriptor.valueParameters.first()?.type
+                    if (parameterType != null && parameterType.arguments.any { !it.isStarProjection }) {
+                        context.trace.report(Errors.TYPE_ARGUMENT_ON_TYPED_VALUE_CLASS_EQUALS.on(declaration.valueParameters[0].typeReference!!))
+                    }
                 }
             }
         }

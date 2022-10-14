@@ -1,11 +1,11 @@
 // FIR_IDENTICAL
 // WITH_STDLIB
 // !DIAGNOSTICS: -DEBUG_INFO_SMARTCAST
-// LANGUAGE: +CustomEqualsInInlineClasses
+// LANGUAGE: +CustomEqualsInValueClasses
 
 @JvmInline
 value class IC1(val x: Int) {
-    override fun <!INEFFICIENT_EQUALS_OVERRIDING_IN_INLINE_CLASS!>equals<!>(other: Any?): Boolean {
+    override fun <!INEFFICIENT_EQUALS_OVERRIDING_IN_VALUE_CLASS!>equals<!>(other: Any?): Boolean {
         if (other !is IC1) {
             return false
         }

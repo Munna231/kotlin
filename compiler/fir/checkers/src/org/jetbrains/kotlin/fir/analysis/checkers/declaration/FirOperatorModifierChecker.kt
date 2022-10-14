@@ -11,6 +11,8 @@
 package org.jetbrains.kotlin.fir.analysis.checkers.declaration
 
 import org.jetbrains.kotlin.config.LanguageFeature
+import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
+import org.jetbrains.kotlin.diagnostics.reportOn
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.Checks.Returns
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.Checks.ValueParametersCount
@@ -21,7 +23,6 @@ import org.jetbrains.kotlin.fir.analysis.checkers.declaration.Checks.noDefaultAn
 import org.jetbrains.kotlin.fir.analysis.checkers.hasModifier
 import org.jetbrains.kotlin.fir.analysis.checkers.isSupertypeOf
 import org.jetbrains.kotlin.fir.analysis.checkers.overriddenFunctions
-import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors
 import org.jetbrains.kotlin.diagnostics.reportOn
 import org.jetbrains.kotlin.fir.containingClassLookupTag
@@ -189,11 +190,11 @@ private object OperatorFunctionChecks {
             object : Check {
                 override fun check(context: CheckerContext, function: FirSimpleFunction): String? {
                     val containingClassSymbol = function.containingClassLookupTag()?.toFirRegularClassSymbol(context.session) ?: return null
-                    val customEqualsSupported = context.languageVersionSettings.supportsFeature(LanguageFeature.CustomEqualsInInlineClasses)
+                    val customEqualsSupported = context.languageVersionSettings.supportsFeature(LanguageFeature.CustomEqualsInValueClasses)
 
                     if (function.overriddenFunctions(containingClassSymbol, context)
                             .any { it.containingClassLookupTag()?.classId == StandardClassIds.Any }
-                        || (customEqualsSupported && function.isTypedEqualsInInlineClass(context.session))
+                        || (customEqualsSupported && function.isTypedEqualsInValueClass(context.session))
                     ) {
                         return null
                     }

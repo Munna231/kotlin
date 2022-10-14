@@ -10,7 +10,7 @@ import org.jetbrains.kotlin.backend.common.lower.MethodsFromAnyGeneratorForLower
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.TypeParameterDescriptor
 import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
-import org.jetbrains.kotlin.ir.builders.*
+import org.jetbrains.kotlin.ir.builders.IrGeneratorContextBase
 import org.jetbrains.kotlin.ir.builders.declarations.addFunction
 import org.jetbrains.kotlin.ir.builders.declarations.addValueParameter
 import org.jetbrains.kotlin.ir.declarations.*
@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.isArray
 import org.jetbrains.kotlin.ir.util.*
+import org.jetbrains.kotlin.util.OperatorNameConventions
 
 class MethodsFromAnyGeneratorForLowerings(val context: BackendContext, val irClass: IrClass, val origin: IrDeclarationOrigin) {
     private fun IrClass.addSyntheticFunction(name: String, returnType: IrType) =
@@ -28,34 +29,34 @@ class MethodsFromAnyGeneratorForLowerings(val context: BackendContext, val irCla
 
     fun createToStringMethodDeclaration(): IrSimpleFunction =
         irClass.addSyntheticFunction("toString", context.irBuiltIns.stringType).apply {
-            overriddenSymbols = irClass.collectOverridenSymbols { it.isToString() }
+            overriddenSymbols = irClass.collectOverriddenSymbols { it.isToString() }
         }
 
     fun createHashCodeMethodDeclaration(): IrSimpleFunction =
         irClass.addSyntheticFunction("hashCode", context.irBuiltIns.intType).apply {
-            overriddenSymbols = irClass.collectOverridenSymbols { it.isHashCode() }
+            overriddenSymbols = irClass.collectOverriddenSymbols { it.isHashCode() }
         }
 
     fun createEqualsMethodDeclaration(): IrSimpleFunction =
         irClass.addSyntheticFunction("equals", context.irBuiltIns.booleanType).apply {
-            overriddenSymbols = irClass.collectOverridenSymbols { it.isEquals(context) }
+            overriddenSymbols = irClass.collectOverriddenSymbols { it.isEquals(context) }
             addValueParameter("other", context.irBuiltIns.anyNType)
         }
 
     companion object {
         fun IrFunction.isToString(): Boolean =
-            name.asString() == "toString" && extensionReceiverParameter == null && contextReceiverParametersCount == 0 && valueParameters.isEmpty()
+            name == OperatorNameConventions.TO_STRING && extensionReceiverParameter == null && contextReceiverParametersCount == 0 && valueParameters.isEmpty()
 
         fun IrFunction.isHashCode() =
-            name.asString() == "hashCode" && extensionReceiverParameter == null && contextReceiverParametersCount == 0 && valueParameters.isEmpty()
+            name == OperatorNameConventions.HASH_CODE && extensionReceiverParameter == null && contextReceiverParametersCount == 0 && valueParameters.isEmpty()
 
         fun IrFunction.isEquals(context: BackendContext) =
-            name.asString() == "equals" &&
+            name == OperatorNameConventions.EQUALS &&
                     extensionReceiverParameter == null && contextReceiverParametersCount == 0 &&
                     valueParameters.singleOrNull()?.type == context.irBuiltIns.anyNType
 
 
-        fun IrClass.collectOverridenSymbols(predicate: (IrFunction) -> Boolean): List<IrSimpleFunctionSymbol> =
+        fun IrClass.collectOverriddenSymbols(predicate: (IrFunction) -> Boolean): List<IrSimpleFunctionSymbol> =
             superTypes.mapNotNull { it.getClass()?.functions?.singleOrNull(predicate)?.symbol }
     }
 }

@@ -321,6 +321,8 @@ object FirErrors {
     val VALUE_CLASS_CANNOT_EXTEND_CLASSES by error0<KtTypeReference>()
     val VALUE_CLASS_CANNOT_BE_RECURSIVE by error0<KtTypeReference>()
     val RESERVED_MEMBER_INSIDE_VALUE_CLASS by error1<KtFunction, String>(SourceElementPositioningStrategies.DECLARATION_NAME)
+    val TYPE_PARAMETER_ON_TYPED_VALUE_CLASS_EQUALS by error0<KtFunction>(SourceElementPositioningStrategies.TYPE_PARAMETERS_LIST)
+    val TYPE_ARGUMENT_ON_TYPED_VALUE_CLASS_EQUALS by error0<KtTypeReference>()
     val INNER_CLASS_INSIDE_VALUE_CLASS by error0<KtDeclaration>(SourceElementPositioningStrategies.INNER_MODIFIER)
     val VALUE_CLASS_CANNOT_BE_CLONEABLE by error0<KtDeclaration>(SourceElementPositioningStrategies.INLINE_OR_VALUE_MODIFIER)
 
@@ -722,7 +724,7 @@ object FirErrors {
     val ILLEGAL_INLINE_PARAMETER_MODIFIER by error0<KtElement>(SourceElementPositioningStrategies.INLINE_PARAMETER_MODIFIER)
     val INLINE_SUSPEND_FUNCTION_TYPE_UNSUPPORTED by error0<KtParameter>()
     val REDUNDANT_INLINE_SUSPEND_FUNCTION_TYPE by warning0<KtElement>(SourceElementPositioningStrategies.SUSPEND_MODIFIER)
-    val INEFFICIENT_EQUALS_OVERRIDING_IN_INLINE_CLASS by warning1<KtNamedFunction, String>(SourceElementPositioningStrategies.DECLARATION_NAME)
+    val INEFFICIENT_EQUALS_OVERRIDING_IN_VALUE_CLASS by warning1<KtNamedFunction, String>(SourceElementPositioningStrategies.DECLARATION_NAME)
 
     // Imports
     val CANNOT_ALL_UNDER_IMPORT_FROM_SINGLETON by error1<KtImportDirective, Name>(SourceElementPositioningStrategies.IMPORT_LAST_NAME)

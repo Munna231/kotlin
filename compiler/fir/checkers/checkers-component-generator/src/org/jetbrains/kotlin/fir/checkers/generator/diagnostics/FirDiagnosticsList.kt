@@ -428,6 +428,8 @@ object DIAGNOSTICS_LIST : DiagnosticList("FirErrors") {
         val RESERVED_MEMBER_INSIDE_VALUE_CLASS by error<KtFunction>(PositioningStrategy.DECLARATION_NAME) {
             parameter<String>("name")
         }
+        val TYPE_PARAMETER_ON_TYPED_VALUE_CLASS_EQUALS by error<KtFunction>(PositioningStrategy.TYPE_PARAMETERS_LIST)
+        val TYPE_ARGUMENT_ON_TYPED_VALUE_CLASS_EQUALS by error<KtTypeReference>()
         val INNER_CLASS_INSIDE_VALUE_CLASS by error<KtDeclaration>(PositioningStrategy.INNER_MODIFIER)
         val VALUE_CLASS_CANNOT_BE_CLONEABLE by error<KtDeclaration>(PositioningStrategy.INLINE_OR_VALUE_MODIFIER)
     }
@@ -1397,7 +1399,7 @@ object DIAGNOSTICS_LIST : DiagnosticList("FirErrors") {
 
         val REDUNDANT_INLINE_SUSPEND_FUNCTION_TYPE by warning<KtElement>(PositioningStrategy.SUSPEND_MODIFIER)
 
-        val INEFFICIENT_EQUALS_OVERRIDING_IN_INLINE_CLASS by warning<KtNamedFunction>(PositioningStrategy.DECLARATION_NAME) {
+        val INEFFICIENT_EQUALS_OVERRIDING_IN_VALUE_CLASS by warning<KtNamedFunction>(PositioningStrategy.DECLARATION_NAME) {
             parameter<String>("className")
         }
     }

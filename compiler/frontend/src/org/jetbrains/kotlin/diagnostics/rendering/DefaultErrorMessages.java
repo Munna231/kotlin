@@ -792,12 +792,14 @@ public class DefaultErrorMessages {
         MAP.put(VALUE_CLASS_CANNOT_EXTEND_CLASSES, "Value class cannot extend classes");
         MAP.put(VALUE_CLASS_CANNOT_BE_RECURSIVE, "Value class cannot be recursive");
         MAP.put(RESERVED_MEMBER_INSIDE_VALUE_CLASS, "Member with the name ''{0}'' is reserved for future releases", STRING);
+        MAP.put(TYPE_PARAMETER_ON_TYPED_VALUE_CLASS_EQUALS, "Typed value class equals cannot have type parameters");
+        MAP.put(TYPE_ARGUMENT_ON_TYPED_VALUE_CLASS_EQUALS, "Type arguments for typed value class equals must be only star projections");
         MAP.put(INNER_CLASS_INSIDE_VALUE_CLASS, "Value class cannot have inner classes");
         MAP.put(VALUE_CLASS_CANNOT_BE_CLONEABLE, "Value class cannot be Cloneable");
         MAP.put(INLINE_CLASS_DEPRECATED, "'inline' modifier is deprecated. Use 'value' instead");
         MAP.put(VALUE_CLASS_CANNOT_HAVE_CONTEXT_RECEIVERS, "Value classes cannot have context receivers");
-        MAP.put(INEFFICIENT_EQUALS_OVERRIDING_IN_INLINE_CLASS,
-                "Overriding ''equals'' from ''Any'' in inline class alongside with lack of ''equals(other: {0}): Boolean'' leads to boxing on every equality comparison",
+        MAP.put(INEFFICIENT_EQUALS_OVERRIDING_IN_VALUE_CLASS,
+                "Overriding ''equals'' from ''Any'' in value class alongside with lack of ''equals(other: {0}): Boolean'' leads to boxing on every equality comparison",
                 STRING);
 
         MAP.put(RESULT_CLASS_IN_RETURN_TYPE, "'kotlin.Result' cannot be used as a return type");

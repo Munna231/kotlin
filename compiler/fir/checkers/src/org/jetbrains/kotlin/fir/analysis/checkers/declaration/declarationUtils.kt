@@ -9,7 +9,6 @@ import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
-import org.jetbrains.kotlin.fir.analysis.checkers.hasModifier
 import org.jetbrains.kotlin.fir.analysis.checkers.modality
 import org.jetbrains.kotlin.fir.containingClassLookupTag
 import org.jetbrains.kotlin.fir.containingClassForStaticMemberAttr
@@ -21,8 +20,6 @@ import org.jetbrains.kotlin.fir.symbols.impl.*
 import org.jetbrains.kotlin.fir.types.classId
 import org.jetbrains.kotlin.fir.types.coneType
 import org.jetbrains.kotlin.fir.types.isBoolean
-import org.jetbrains.kotlin.fir.types.isNullableAny
-import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.util.OperatorNameConventions
 
 internal fun isInsideExpectClass(containingClass: FirClass, context: CheckerContext): Boolean {
@@ -119,9 +116,9 @@ fun FirClassSymbol<*>.primaryConstructorSymbol(): FirConstructorSymbol? {
     return null
 }
 
-fun FirSimpleFunction.isTypedEqualsInInlineClass(session: FirSession): Boolean =
+fun FirSimpleFunction.isTypedEqualsInValueClass(session: FirSession): Boolean =
     containingClassLookupTag()?.toFirRegularClassSymbol(session)?.run {
-        with(this@isTypedEqualsInInlineClass) {
+        with(this@isTypedEqualsInValueClass) {
             contextReceivers.isEmpty() && receiverTypeRef == null && name == OperatorNameConventions.EQUALS
                     && this@run.isInline && valueParameters.size == 1 && returnTypeRef.isBoolean
                     && valueParameters[0].returnTypeRef.coneType.classId == this@run.classId

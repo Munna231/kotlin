@@ -44,9 +44,6 @@ import org.jetbrains.kotlin.gradle.testing.internal.configureConventions
 import org.jetbrains.kotlin.gradle.testing.internal.kotlinTestRegistry
 import org.jetbrains.kotlin.gradle.testing.testTaskName
 import org.jetbrains.kotlin.gradle.utils.*
-import org.jetbrains.kotlin.gradle.utils.Xcode
-import org.jetbrains.kotlin.gradle.utils.lowerCamelCaseName
-import org.jetbrains.kotlin.gradle.utils.newInstance
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.konan.target.KonanTarget
 import java.io.File
@@ -531,9 +528,7 @@ open class KotlinNativeTargetConfigurator<T : KotlinNativeTarget> : AbstractKotl
                     .addSubpluginOptions(project, compilation)
 
                 compilation.compileKotlinTaskProvider.configure {
-                    it.compilerPluginClasspath = project
-                        .configurations
-                        .getByName(compilation.pluginConfigurationName)
+                    it.compilerPluginClasspath = compilation.configurations.pluginConfiguration
                 }
             }
         }

@@ -6,8 +6,8 @@
 package org.jetbrains.kotlin.gradle.targets.native
 
 import org.gradle.api.Project
-import org.jetbrains.kotlin.gradle.dsl.CompilerCommonOptions
-import org.jetbrains.kotlin.gradle.dsl.CompilerCommonOptionsDefault
+import org.jetbrains.kotlin.gradle.dsl.KotlinCommonCompilerOptions
+import org.jetbrains.kotlin.gradle.dsl.KotlinCommonCompilerOptionsDefault
 import org.jetbrains.kotlin.gradle.plugin.HasCompilerOptions
 import org.jetbrains.kotlin.gradle.plugin.runOnceAfterEvaluated
 import org.jetbrains.kotlin.gradle.plugin.sources.applyLanguageSettingsToCompilerOptions
@@ -22,15 +22,15 @@ internal class NativeCompilerOptions
 @UnsafeApi constructor(
     project: Project,
     languageSettings: Optional<LanguageSettings>
-) : HasCompilerOptions<CompilerCommonOptions> {
+) : HasCompilerOptions<KotlinCommonCompilerOptions> {
 
     @OptIn(UnsafeApi::class)
     constructor(project: Project, languageSettings: LanguageSettings) : this(
         project, Optional.of(languageSettings)
     )
 
-    override val options: CompilerCommonOptions = project.objects
-        .newInstance(CompilerCommonOptionsDefault::class.java)
+    override val options: KotlinCommonCompilerOptions = project.objects
+        .newInstance(KotlinCommonCompilerOptionsDefault::class.java)
         .apply {
             useK2.finalizeValue()
 
@@ -45,7 +45,9 @@ internal class NativeCompilerOptions
          * Only call when no languageSettings were provided in the constructor!
          */
         @UnsafeApi
-        fun applyLanguageSettingsToCompilerOptions(project: Project, languageSettings: LanguageSettings, options: CompilerCommonOptions) {
+        fun applyLanguageSettingsToCompilerOptions(
+            project: Project, languageSettings: LanguageSettings, options: KotlinCommonCompilerOptions
+        ) {
             project.runOnceAfterEvaluated("apply Kotlin native properties from language settings") {
                 applyLanguageSettingsToCompilerOptions(languageSettings, options)
             }

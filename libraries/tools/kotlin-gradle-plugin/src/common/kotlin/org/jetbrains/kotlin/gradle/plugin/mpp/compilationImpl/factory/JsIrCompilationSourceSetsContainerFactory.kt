@@ -8,7 +8,7 @@ package org.jetbrains.kotlin.gradle.plugin.mpp.compilationImpl.factory
 import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.compilationImpl.KotlinCompilationSourceSetsContainer
-import org.jetbrains.kotlin.gradle.targets.js.KotlinJsTarget
+import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
 import org.jetbrains.kotlin.gradle.utils.lowerCamelCaseName
 
 internal object JsIrCompilationSourceSetsContainerFactory : KotlinCompilationImplFactory.KotlinCompilationSourceSetsContainerFactory {
@@ -20,7 +20,7 @@ internal object JsIrCompilationSourceSetsContainerFactory : KotlinCompilationImp
 
     private fun defaultSourceSetName(target: KotlinTarget, compilationName: String): String {
         return lowerCamelCaseName(
-            if (target is KotlinJsTarget && target.mixedMode)
+            if (target is KotlinJsIrTarget && target.legacyTarget != null)
                 target.disambiguationClassifierInPlatform
             else target.disambiguationClassifier,
             compilationName

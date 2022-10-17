@@ -32,7 +32,11 @@ public interface KtVisibilityCheckerMixIn : KtAnalysisSessionMixIn {
         analysisSession.visibilityChecker.isVisible(candidateSymbol, useSiteFile, position, receiverExpression)
     }
 
-    /* Returns true for effectively public symbols, including internal declarations with @PublishedApi annotation */
+    /**
+     * Returns true for effectively public symbols, including internal declarations with @PublishedApi annotation.
+     * In 'Explicit API' mode explicit visibility modifier and explicit return types are required for such symbols.
+     * See FirExplicitApiDeclarationChecker.kt
+     */
     public fun isPublicApi(symbol: KtSymbolWithVisibility): Boolean = withValidityAssertion {
         analysisSession.visibilityChecker.isPublicApi(symbol)
     }

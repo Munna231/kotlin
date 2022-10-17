@@ -67,10 +67,11 @@ internal class KtFirVisibilityChecker(
     }
 
     override fun isPublicApi(symbol: KtSymbolWithVisibility): Boolean {
+        require(symbol is KtFirSymbol<*>)
         val declaration = symbol.firSymbol.fir as? FirMemberDeclaration ?: return false
 
         // Inspecting visibility requires resolving to status
-        symbol.firSymbol.lazyResolveToPhase(FirResolvePhase.STATUS)
+        declaration.lazyResolveToPhase(FirResolvePhase.STATUS)
         return declaration.effectiveVisibility.publicApi || declaration.publishedApiEffectiveVisibility?.publicApi == true
     }
 

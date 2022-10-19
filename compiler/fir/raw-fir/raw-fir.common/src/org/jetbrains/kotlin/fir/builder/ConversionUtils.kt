@@ -588,3 +588,25 @@ data class CalleeAndReceiver(
     val receiverExpression: FirExpression? = null,
     val isImplicitInvoke: Boolean = false
 )
+
+/**
+ * Creates balanced tree of OR expressions for given set of conditions
+ * We do so, to avoid too deep OR-expression structures, that can cause running out of stack while processing
+ * [conditions] should contain at least one element, otherwise it will cause StackOverflow
+ */
+fun buildBalancedOrExpressionTree(conditions: List<FirExpression>, lower: Int = 0, upper: Int = conditions.lastIndex): FirExpression {
+    val size = upper - lower + 1
+    val middle = size / 2 + lower
+
+    if (lower == upper) {
+        return conditions[middle]
+    }
+    val rightNode = buildBalancedOrExpressionTree(conditions, lower, middle - 1)
+    val leftNode = buildBalancedOrExpressionTree(conditions, middle, upper)
+
+    return rightNode.generateLazyLogicalOperation(
+        leftNode,
+        isAnd = false,
+        (rightNode.source ?: leftNode.source)?.fakeElement(KtFakeSourceElementKind.WhenCondition)
+    )
+}

@@ -18,6 +18,7 @@ import org.jetbrains.kotlin.fir.symbols.ConeClassLikeLookupTag
 import org.jetbrains.kotlin.fir.symbols.impl.ConeClassLookupTagWithFixedSymbol
 import org.jetbrains.kotlin.analysis.utils.errors.buildErrorWithAttachment
 import org.jetbrains.kotlin.analysis.utils.errors.checkWithAttachmentBuilder
+import org.jetbrains.kotlin.fir.unwrapFakeOverrides
 
 class FirDeclarationDesignationWithFile(
     path: List<FirDeclaration>,
@@ -60,8 +61,12 @@ private fun FirRegularClass.collectForNonLocal(): List<FirDeclaration> {
 private fun collectDesignationPath(declaration: FirDeclaration): List<FirDeclaration>? {
     val containingClass = when (declaration) {
         is FirCallableDeclaration -> {
-            if (declaration !is FirConstructor && declaration.symbol.callableId.isLocal) return null
-            if ((declaration as? FirCallableDeclaration)?.status?.visibility == Visibilities.Local) return null
+            val unwrappedCallable = declaration.unwrapFakeOverrides()
+            if (unwrappedCallable !== declaration) return collectDesignationPath(unwrappedCallable)
+
+            if ((declaration !is FirConstructor && declaration.symbol.callableId.isLocal)) return null
+            if (declaration.status.visibility == Visibilities.Local) return null
+
             when (declaration) {
                 is FirSimpleFunction, is FirProperty, is FirField, is FirConstructor, is FirEnumEntry -> {
                     val klass = declaration.containingClassLookupTag() ?: return emptyList()

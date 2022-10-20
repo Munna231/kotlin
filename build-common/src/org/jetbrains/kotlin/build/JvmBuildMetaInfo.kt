@@ -31,7 +31,7 @@ class JvmBuildMetaInfo : BuildMetaInfo() {
                 val previousVersionIntArray = BinaryVersion.parseVersionArray(previousValue)
                 if (previousVersionIntArray?.size != 3) return null
                 val previousVersion = JvmMetadataVersion(previousVersionIntArray[0], previousVersionIntArray[1], previousVersionIntArray[2])
-                return currentVersion == previousVersion
+                return currentVersion != previousVersion
             }
         }
         return null

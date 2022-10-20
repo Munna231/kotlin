@@ -13,7 +13,7 @@ import org.jetbrains.kotlin.config.PluginClasspathsComparator
 
 abstract class BuildMetaInfo {
     enum class CustomKeys {
-        LANGUAGE_VERSION_STRING, IS_EAP, METADATA_VERSION_STRING, PLUGIN_CLASSPATH, API_VERSION_STRING
+        LANGUAGE_VERSION_STRING, IS_EAP, METADATA_VERSION_STRING, PLUGIN_CLASSPATHS, API_VERSION_STRING
     }
 
     fun obtainReasonForRebuild(currentCompilerArgumentsMap: Map<String, String>, previousCompilerArgsMap: Map<String, String>): String? {
@@ -47,7 +47,7 @@ abstract class BuildMetaInfo {
             CustomKeys.LANGUAGE_VERSION_STRING.name ->
                 return LanguageVersion.fromVersionString(currentValue) != LanguageVersion.fromVersionString(previousValue)
             CustomKeys.API_VERSION_STRING.name -> return ApiVersion.parse(currentValue) != ApiVersion.parse(previousValue)
-            CustomKeys.PLUGIN_CLASSPATH.name -> return PluginClasspathsComparator(previousValue, currentValue).equals()
+            CustomKeys.PLUGIN_CLASSPATHS.name -> return !PluginClasspathsComparator(previousValue, currentValue).equals()
         }
 
         // check keys that are sensitive for true -> false change
@@ -81,7 +81,7 @@ abstract class BuildMetaInfo {
         resultMap[CustomKeys.API_VERSION_STRING.name] = apiVersionString
 
         val pluginClasspaths = PluginClasspaths(args.pluginClasspaths).serialize()
-        resultMap[CustomKeys.PLUGIN_CLASSPATH.name] = pluginClasspaths
+        resultMap[CustomKeys.PLUGIN_CLASSPATHS.name] = pluginClasspaths
 
         return resultMap
     }

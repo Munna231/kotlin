@@ -202,7 +202,7 @@ internal class FunctionReferenceLowering(val context: Context) : FileLoweringPas
             startOffset = this@FunctionReferenceBuilder.startOffset
             endOffset = this@FunctionReferenceBuilder.endOffset
             origin = DECLARATION_ORIGIN_FUNCTION_REFERENCE_IMPL
-            name = "${functionReferenceTarget.name}\$FUNCTION_REFERENCE\$${fileLowerState.functionReferenceCount++}".synthesizedName
+            name = fileLowerState.getFunctionReferenceImplUniqueName(functionReferenceTarget).synthesizedName
             visibility = DescriptorVisibilities.PRIVATE
         }.apply {
             parent = this@FunctionReferenceBuilder.parent

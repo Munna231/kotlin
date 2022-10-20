@@ -12,7 +12,7 @@ private const val dumpBridges = false
 
 internal class CStubsManager(private val target: KonanTarget, private val generationState: NativeGenerationState) {
 
-    fun getUniqueName(prefix: String) = "$prefix${generationState.fileLowerState.cStubCount++}"
+    fun getUniqueName(prefix: String) = generationState.fileLowerState.getCStubUniqueName(prefix)
 
     fun addStub(kotlinLocation: CompilerMessageLocation?, lines: List<String>, language: String) {
         val stubs = languageToStubs.getOrPut(language) { mutableListOf() }

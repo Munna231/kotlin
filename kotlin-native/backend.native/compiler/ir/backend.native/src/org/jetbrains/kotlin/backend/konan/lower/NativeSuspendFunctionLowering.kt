@@ -18,7 +18,6 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrSetValueImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrSuspendableExpressionImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrSuspensionPointImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
-import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrVariableSymbol
 import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrVariableSymbolImpl
@@ -43,7 +42,7 @@ internal class NativeSuspendFunctionsLowering(ctx: Context) : AbstractSuspendFun
             })
 
     override fun nameForCoroutineClass(function: IrFunction) =
-            "${function.name}COROUTINE\$${fileLowerState.coroutineCount++}".synthesizedName
+            fileLowerState.getCoroutineImplUniqueName(function).synthesizedName
 
     override fun initializeStateMachine(coroutineConstructors: List<IrConstructor>, coroutineClassThis: IrValueDeclaration) {
         // Nothing to do: it's redundant to initialize the "label" field with null

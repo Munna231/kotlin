@@ -23,9 +23,21 @@ import org.jetbrains.kotlin.konan.file.File
 internal class InlineFunctionOriginInfo(val irFunction: IrFunction, val irFile: IrFile, val startOffset: Int, val endOffset: Int)
 
 internal class FileLowerState {
-    var functionReferenceCount = 0
-    var coroutineCount = 0
-    var cStubCount = 0
+    private var functionReferenceCount = 0
+    private var coroutineCount = 0
+    private var cStubCount = 0
+
+    fun getFunctionReferenceImplUniqueName(targetFunction: IrFunction): String =
+            getFunctionReferenceImplUniqueName("${targetFunction.name}\$FUNCTION_REFERENCE\$")
+
+    fun getCoroutineImplUniqueName(function: IrFunction): String =
+            "${function.name}COROUTINE\$${coroutineCount++}"
+
+    fun getFunctionReferenceImplUniqueName(prefix: String) =
+            "$prefix${functionReferenceCount++}"
+
+    fun getCStubUniqueName(prefix: String) =
+            "$prefix${cStubCount++}"
 }
 
 internal class NativeGenerationState(private val context: Context) {

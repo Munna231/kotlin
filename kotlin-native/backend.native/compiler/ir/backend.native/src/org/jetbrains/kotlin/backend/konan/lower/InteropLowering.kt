@@ -106,7 +106,7 @@ private abstract class BaseInteropIrTransformer(private val context: Context) : 
                     "$uniquePrefix${cStubsManager.getUniqueName(prefix)}"
 
             override fun getUniqueKotlinFunctionReferenceClassName(prefix: String) =
-                    "$prefix${context.generationState.fileLowerState.functionReferenceCount++}"
+                    context.generationState.fileLowerState.getFunctionReferenceImplUniqueName(prefix)
 
             override val target get() = context.config.target
 

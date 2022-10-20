@@ -320,6 +320,7 @@ object FirErrors {
     val VALUE_CLASS_CANNOT_IMPLEMENT_INTERFACE_BY_DELEGATION by error0<PsiElement>()
     val VALUE_CLASS_CANNOT_EXTEND_CLASSES by error0<KtTypeReference>()
     val VALUE_CLASS_CANNOT_BE_RECURSIVE by error0<KtTypeReference>()
+    val MULTI_FIELD_VALUE_CLASS_PRIMARY_CONSTRUCTOR_DEFAULT_PARAMETER by error0<KtExpression>()
     val RESERVED_MEMBER_INSIDE_VALUE_CLASS by error1<KtFunction, String>(SourceElementPositioningStrategies.DECLARATION_NAME)
     val TYPE_PARAMETER_ON_TYPED_VALUE_CLASS_EQUALS by error0<KtFunction>(SourceElementPositioningStrategies.TYPE_PARAMETERS_LIST)
     val TYPE_ARGUMENT_ON_TYPED_VALUE_CLASS_EQUALS by error0<KtTypeReference>()

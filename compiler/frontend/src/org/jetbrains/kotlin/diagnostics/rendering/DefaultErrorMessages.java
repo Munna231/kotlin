@@ -791,6 +791,7 @@ public class DefaultErrorMessages {
         MAP.put(VALUE_CLASS_CANNOT_IMPLEMENT_INTERFACE_BY_DELEGATION, "Value class cannot implement an interface by delegation if expression is not a parameter");
         MAP.put(VALUE_CLASS_CANNOT_EXTEND_CLASSES, "Value class cannot extend classes");
         MAP.put(VALUE_CLASS_CANNOT_BE_RECURSIVE, "Value class cannot be recursive");
+        MAP.put(MULTI_FIELD_VALUE_CLASS_PRIMARY_CONSTRUCTOR_DEFAULT_PARAMETER, "Multi-field value class primary constructor default parameters are not supported");
         MAP.put(RESERVED_MEMBER_INSIDE_VALUE_CLASS, "Member with the name ''{0}'' is reserved for future releases", STRING);
         MAP.put(TYPE_PARAMETER_ON_TYPED_VALUE_CLASS_EQUALS, "Typed value class equals cannot have type parameters");
         MAP.put(TYPE_ARGUMENT_ON_TYPED_VALUE_CLASS_EQUALS, "Type arguments for typed value class equals must be only star projections");

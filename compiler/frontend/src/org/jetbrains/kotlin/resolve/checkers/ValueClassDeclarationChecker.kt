@@ -19,14 +19,13 @@ import org.jetbrains.kotlin.resolve.calls.util.getResolvedCall
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameUnsafe
 import org.jetbrains.kotlin.resolve.descriptorUtil.getAllSuperClassifiers
 import org.jetbrains.kotlin.types.KotlinType
-import org.jetbrains.kotlin.types.checker.SimpleClassicTypeSystemContext.typeConstructor
 import org.jetbrains.kotlin.types.typeUtil.isNothing
 import org.jetbrains.kotlin.types.typeUtil.isTypeParameter
 import org.jetbrains.kotlin.types.typeUtil.isUnit
 
 private val javaLangCloneable = FqNameUnsafe("java.lang.Cloneable")
 
-object InlineClassDeclarationChecker : DeclarationChecker {
+object ValueClassDeclarationChecker : DeclarationChecker {
     override fun check(declaration: KtDeclaration, descriptor: DeclarationDescriptor, context: DeclarationCheckerContext) {
         if (declaration !is KtClass) return
         if (descriptor !is ClassDescriptor || !descriptor.isInline && !descriptor.isValue) return
@@ -127,6 +126,11 @@ object InlineClassDeclarationChecker : DeclarationChecker {
                     baseParametersOk = false
                     continue
                 }
+
+                if (descriptor.isMultiFieldValueClass() && baseParameter.defaultValue != null) {
+                    // todo fix when inline arguments are supported
+                    trace.report(Errors.MULTI_FIELD_VALUE_CLASS_PRIMARY_CONSTRUCTOR_DEFAULT_PARAMETER.on(baseParameter.defaultValue!!))
+                }
             }
         }
         if (!baseParametersOk) {
@@ -196,7 +200,7 @@ object InlineClassDeclarationChecker : DeclarationChecker {
     }
 }
 
-class PropertiesWithBackingFieldsInsideInlineClass : DeclarationChecker {
+class PropertiesWithBackingFieldsInsideValueClass : DeclarationChecker {
     override fun check(declaration: KtDeclaration, descriptor: DeclarationDescriptor, context: DeclarationCheckerContext) {
         if (declaration !is KtProperty) return
         if (descriptor !is PropertyDescriptor) return
@@ -213,7 +217,7 @@ class PropertiesWithBackingFieldsInsideInlineClass : DeclarationChecker {
     }
 }
 
-class InnerClassInsideInlineClass : DeclarationChecker {
+class InnerClassInsideValueClass : DeclarationChecker {
     override fun check(declaration: KtDeclaration, descriptor: DeclarationDescriptor, context: DeclarationCheckerContext) {
         if (declaration !is KtClass) return
         if (descriptor !is ClassDescriptor) return
@@ -225,7 +229,7 @@ class InnerClassInsideInlineClass : DeclarationChecker {
     }
 }
 
-class ReservedMembersAndConstructsForInlineClass : DeclarationChecker {
+class ReservedMembersAndConstructsForValueClass : DeclarationChecker {
 
     companion object {
         private val boxAndUnboxNames = setOf("box", "unbox")

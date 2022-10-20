@@ -1363,6 +1363,12 @@ internal val KT_DIAGNOSTIC_CONVERTER = KtDiagnosticConverterBuilder.buildConvert
             token,
         )
     }
+    add(FirErrors.MULTI_FIELD_VALUE_CLASS_PRIMARY_CONSTRUCTOR_DEFAULT_PARAMETER) { firDiagnostic ->
+        MultiFieldValueClassPrimaryConstructorDefaultParameterImpl(
+            firDiagnostic as KtPsiDiagnostic,
+            token,
+        )
+    }
     add(FirErrors.RESERVED_MEMBER_INSIDE_VALUE_CLASS) { firDiagnostic ->
         ReservedMemberInsideValueClassImpl(
             firDiagnostic.a,

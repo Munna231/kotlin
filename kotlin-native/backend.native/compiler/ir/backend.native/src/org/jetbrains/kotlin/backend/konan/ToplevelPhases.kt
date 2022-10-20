@@ -243,10 +243,11 @@ internal val allLoweringsPhase = SameTypeNamedCompilerPhase(
         name = "IrLowering",
         description = "IR Lowering",
         // TODO: The lowerings before inlinePhase should be aligned with [NativeInlineFunctionResolver.kt]
-        lower = createFileLowerStatePhase then performByIrFile(
+        lower = performByIrFile(
                 name = "IrLowerByFile",
                 description = "IR Lowering by file",
                 lower = listOf(
+                        createFileLowerStatePhase,
                         removeExpectDeclarationsPhase,
                         stripTypeAliasDeclarationsPhase,
                         lowerBeforeInlinePhase,

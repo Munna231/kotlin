@@ -96,7 +96,7 @@ internal val propertyAccessorInlinePhase = makeKonanModuleLoweringPhase(
 
 /* IrFile phases */
 
-internal val createFileLowerStatePhase = makeKonanModuleOpPhase(
+internal val createFileLowerStatePhase = makeKonanFileOpPhase(
         { context, _ -> context.generationState.fileLowerState = FileLowerState() },
         name = "CreateFileLowerState",
         description = "Create FileLowerState"

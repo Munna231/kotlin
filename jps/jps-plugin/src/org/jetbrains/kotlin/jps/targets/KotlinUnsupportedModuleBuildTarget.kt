@@ -8,7 +8,6 @@ package org.jetbrains.kotlin.jps.targets
 import org.jetbrains.jps.builders.storage.BuildDataPaths
 import org.jetbrains.jps.incremental.ModuleBuildTarget
 import org.jetbrains.kotlin.build.BuildMetaInfo
-import org.jetbrains.kotlin.build.BuildMetaInfoFactory
 import org.jetbrains.kotlin.cli.common.arguments.CommonCompilerArguments
 import org.jetbrains.kotlin.compilerRunner.JpsCompilerEnvironment
 import org.jetbrains.kotlin.jps.build.KotlinCompileContext
@@ -51,5 +50,8 @@ class KotlinUnsupportedModuleBuildTarget(
     }
 
     override val compilerArgumentsFileName: String
+        get() = shouldNotBeCalled()
+
+    override val buildMetaInfo: BuildMetaInfo
         get() = shouldNotBeCalled()
 }

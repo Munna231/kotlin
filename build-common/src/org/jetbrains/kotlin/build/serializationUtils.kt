@@ -71,15 +71,6 @@ fun <T : Any> deserializeFromPlainText(str: String, klass: KClass<T>): T? {
     return primaryConstructor.call(*args.toTypedArray())
 }
 
-fun serializeArgsToString(args: CommonCompilerArguments) = serializeMapToString(transformClassToPropertiesMap(args, excludedProperties))
-
-fun serializeMapToString(myList: Map<String, String>) = myList.map { "${it.key}=${it.value}" }.joinToString("\n")
-
-fun deserializeMapFromString(inputString: String) = inputString
-    .split("\n")
-    .filter(String::isNotBlank)
-    .associate { it.substringBefore("=") to it.substringAfter("=") }
-
 @Suppress("UNCHECKED_CAST")
 fun <T : Any> transformClassToPropertiesMap(classToTransform: T, excludedProperties: List<String> = emptyList()) =
     collectProperties(classToTransform::class as KClass<T>, false)
@@ -88,58 +79,9 @@ fun <T : Any> transformClassToPropertiesMap(classToTransform: T, excludedPropert
             keySelector = { property -> property.name },
             valueTransform = { property -> property.get(classToTransform).toString() })
 
-// TODO: aocherepanov: look throw
-val excludedProperties = listOf(
-    "backendThreads",
-    "buildFile",
-    "classpath",
-    "declarationsOutputPath",
-    "defaultScriptExtension",
-    "dumpDirectory",
-    "dumpOnlyFqName",
-    "dumpPerf",
-    "enableDebugMode",
-    "errors",
-    "expression",
-    "extraHelp",
-    "freeArgs",
-    "help",
-    "intellijPluginRoot",
-    "kotlinHome",
-    "listPhases",
-    "namesExcludedFromDumping",
-    "phasesToDump",
-    "phasesToDumpAfter",
-    "phasesToDumpBefore",
-    "profileCompilerCommand",
-    "profilePhases",
-    "renderInternalDiagnosticNames",
-    "repeatCompileModules",
-    "reportOutputFiles",
-    "reportPerf",
-    "script",
-    "scriptResolverEnvironment",
-    "scriptTemplates",
-    "suppressDeprecatedJvmTargetWarning",
-    "useFastJarFileSystem",
-    "verbose",
-    "verbosePhases",
-    "version"
-)
-
-val argumentsListForspecialCheck = listOf(
-    "allowAnyScriptsInSourceRoots",
-    "allowKotlinPackage",
-    "allowNoSourceFiles",
-    "allowResultReturnType",
-    "allowUnstableDependencies",
-    "enableJvmPreview",
-    "ignoreConstOptimizationErrors",
-    "noCheckActual",
-    "skipMetadataVersionCheck",
-    "skipPrereleaseCheck",
-    "suppressMissingBuiltinsError",
-    "suppressVersionWarnings",
-    "suppressWarnings"
-
-)
+fun List<String>.joinToReadableString(): String = when {
+    size > 5 -> take(5).joinToString() + " and ${size - 5} more"
+    size > 1 -> dropLast(1).joinToString() + " and ${last()}"
+    size == 1 -> single()
+    else -> ""
+}

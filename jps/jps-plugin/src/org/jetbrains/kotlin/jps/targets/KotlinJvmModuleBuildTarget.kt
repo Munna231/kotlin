@@ -65,6 +65,9 @@ class KotlinJvmModuleBuildTarget(kotlinContext: KotlinCompileContext, jpsModuleB
     override val compilerArgumentsFileName
         get() = JVM_BUILD_META_INFO_FILE_NAME
 
+    override val buildMetaInfo: JvmBuildMetaInfo
+        get() = JvmBuildMetaInfo()
+
     override val targetId: TargetId
         get() {
             val moduleName = module.k2JvmCompilerArguments.moduleName

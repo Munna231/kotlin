@@ -330,50 +330,34 @@ abstract class KotlinModuleBuildTarget<BuildMetaInfoType : BuildMetaInfo> intern
 
     abstract val compilerArgumentsFileName: String
 
+    abstract val buildMetaInfo: BuildMetaInfoType
+
     fun isVersionChanged(chunk: KotlinChunk, compilerArguments: CommonCompilerArguments): Boolean {
         fun printReasonToRebuild(reasonToRebuild: String) {
             KotlinBuilder.LOG.info("$reasonToRebuild. Performing non-incremental rebuild (kotlin only)")
         }
 
-        val currentCompilerArgumentsMap = transformClassToPropertiesMap(compilerArguments, excludedProperties)
+        val currentCompilerArgumentsMap = buildMetaInfo.createPropertiesMapFromCompilerArguments(compilerArguments)
 
         val file = chunk.compilerArgumentsFile(jpsModuleBuildTarget)
         if (Files.notExists(file)) return false
 
         val previousCompilerArgsMap =
             try {
-                deserializeMapFromString(Files.newInputStream(file).bufferedReader().use { it.readText() })
+                buildMetaInfo.deserializeMapFromString(Files.newInputStream(file).bufferedReader().use { it.readText() })
             } catch (e: Exception) {
                 KotlinBuilder.LOG.error("Could not deserialize previous compiler arguments info", e)
                 return false
             }
 
+        val rebuildReason = buildMetaInfo.obtainReasonForRebuild(currentCompilerArgumentsMap, previousCompilerArgsMap)
 
-        if (currentCompilerArgumentsMap.keys != previousCompilerArgsMap.keys) {
-            printReasonToRebuild("Compiler arguments version was changed")
-            return true
-        }
-
-        val changedCompilerArguments = currentCompilerArgumentsMap.mapNotNull {
-            val key = it.key
-            val previousValue = previousCompilerArgsMap[it.key]
-            val currentValue = it.value
-            return@mapNotNull if (key in argumentsListForspecialCheck && previousValue == "true" && currentValue != "true") {
-                key
-            } else if (previousCompilerArgsMap[key] != currentValue) {
-                key
-            } else null
-        }
-        if (changedCompilerArguments.isNotEmpty()) {
-            val rebuildReason = when (changedCompilerArguments.size) {
-                1 -> "One of compiler arguments was changed: "
-                else -> "Some compiler arguments were changed: "
-            } + changedCompilerArguments.joinToReadableString()
+        return if (rebuildReason != null) {
             printReasonToRebuild(rebuildReason)
-            return true
+            true
+        } else {
+            false
         }
-
-        return false
     }
 
     private fun checkRepresentativeTarget(chunk: KotlinChunk) {

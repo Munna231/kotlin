@@ -37,6 +37,9 @@ class KotlinCommonModuleBuildTarget(kotlinContext: KotlinCompileContext, jpsModu
     override val compilerArgumentsFileName
         get() = COMMON_BUILD_META_INFO_FILE_NAME
 
+    override val buildMetaInfo: CommonBuildMetaInfo
+        get() = CommonBuildMetaInfo()
+
     override val globalLookupCacheId: String
         get() = "metadata-compiler"
 

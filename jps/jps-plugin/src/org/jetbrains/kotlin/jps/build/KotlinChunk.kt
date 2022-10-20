@@ -9,9 +9,6 @@ import org.jetbrains.jps.incremental.ModuleBuildTarget
 import org.jetbrains.jps.model.java.JpsJavaClasspathKind
 import org.jetbrains.jps.model.java.JpsJavaExtensionService
 import org.jetbrains.jps.model.module.JpsModuleDependency
-import org.jetbrains.kotlin.build.excludedProperties
-import org.jetbrains.kotlin.build.transformClassToPropertiesMap
-import org.jetbrains.kotlin.build.serializeArgsToString
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.jps.incremental.CacheStatus
@@ -170,9 +167,10 @@ class KotlinChunk internal constructor(val context: KotlinCompileContext, val ta
             it.initialLocalCacheAttributesDiff.manager.writeVersion()
         }
 
-        val serializedCompilerArguments = serializeArgsToString(compilerArguments)
+        val serializedCompilerArguments = representativeTarget.buildMetaInfo.serializeArgsToString(compilerArguments)
         targets.forEach { target ->
-            Files.newOutputStream(compilerArgumentsFile(target.jpsModuleBuildTarget)).bufferedWriter().use { it.append(serializedCompilerArguments) }
+            Files.newOutputStream(compilerArgumentsFile(target.jpsModuleBuildTarget)).bufferedWriter()
+                .use { it.append(serializedCompilerArguments) }
         }
     }
 

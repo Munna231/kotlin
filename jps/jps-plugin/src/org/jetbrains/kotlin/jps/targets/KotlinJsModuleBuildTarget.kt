@@ -57,6 +57,9 @@ class KotlinJsModuleBuildTarget(kotlinContext: KotlinCompileContext, jpsModuleBu
     override val compilerArgumentsFileName: String
         get() = JS_BUILD_META_INFO_FILE_NAME
 
+    override val buildMetaInfo: JsBuildMetaInfo
+        get() = JsBuildMetaInfo()
+
     val isFirstBuild: Boolean
         get() {
             val targetDataRoot = jpsGlobalContext.projectDescriptor.dataManager.dataPaths.getTargetDataRoot(jpsModuleBuildTarget)

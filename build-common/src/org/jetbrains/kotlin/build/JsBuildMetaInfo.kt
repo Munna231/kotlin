@@ -36,8 +36,6 @@ class JsBuildMetaInfo : BuildMetaInfo() {
         return super.createPropertiesMapFromCompilerArguments(args) + resultMap
     }
 
-    override val excludedProperties: List<String>
-        get() = super.excludedProperties //TODO
     override val argumentsListForSpecialCheck: List<String>
-        get() = super.argumentsListForSpecialCheck //TODO
+        get() = super.argumentsListForSpecialCheck + listOf("sourceMap", "metaInfo" + "partialLinkage" + "wasmDebug")
 }

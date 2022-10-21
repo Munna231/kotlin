@@ -15,6 +15,7 @@ abstract class DependencyProvider : TestService {
 
     abstract fun unregisterAllArtifacts(module: TestModule)
     abstract fun copy(): DependencyProvider
+    abstract fun getIncomingDependencies(module: TestModule): List<DependencyDescription>
 }
 
 val TestServices.dependencyProvider: DependencyProvider by TestServices.testServiceAccessor()
@@ -26,7 +27,7 @@ class DependencyProviderImpl(
     private val assertions: Assertions
         get() = testServices.assertions
 
-    private val testModulesByName = testModules.map { it.name to it }.toMap()
+    private val testModulesByName = testModules.associateBy { it.name }
 
     private val artifactsByModule: MutableMap<TestModule, MutableMap<TestArtifactKind<*>, ResultingArtifact<*>>> = mutableMapOf()
 
@@ -55,6 +56,10 @@ class DependencyProviderImpl(
         return DependencyProviderImpl(testServices, testModules).also {
             artifactsByModule.putAll(artifactsByModule.mapValues { (_, map) -> map.toMutableMap() })
         }
+    }
+
+    override fun getIncomingDependencies(module: TestModule): List<DependencyDescription> {
+        return testModules.mapNotNull { testModule -> testModule.allDependencies.find { testModulesByName[it.moduleName] == module } }
     }
 
     private fun <K, V, R> MutableMap<K, MutableMap<V, R>>.getMap(key: K): MutableMap<V, R> {

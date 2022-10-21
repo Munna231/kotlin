@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporterFactory
 import org.jetbrains.kotlin.diagnostics.KtDiagnostic
 import org.jetbrains.kotlin.fir.analysis.collectors.FirDiagnosticsCollector
+import org.jetbrains.kotlin.fir.backend.Fir2IrComponents
 import org.jetbrains.kotlin.fir.backend.Fir2IrConverter
 import org.jetbrains.kotlin.fir.backend.Fir2IrExtensions
 import org.jetbrains.kotlin.fir.backend.Fir2IrResult
@@ -37,7 +38,7 @@ abstract class AbstractFirAnalyzerFacade {
 
     abstract fun runResolution(): List<FirFile>
 
-    abstract fun convertToIr(fir2IrExtensions: Fir2IrExtensions): Fir2IrResult
+    abstract fun convertToIr(fir2IrExtensions: Fir2IrExtensions, dependentComponents: List<Fir2IrComponents>): Fir2IrResult
 }
 
 class FirAnalyzerFacade(
@@ -102,7 +103,7 @@ class FirAnalyzerFacade(
         return collectedDiagnostics!!
     }
 
-    override fun convertToIr(fir2IrExtensions: Fir2IrExtensions): Fir2IrResult {
+    override fun convertToIr(fir2IrExtensions: Fir2IrExtensions, dependentComponents: List<Fir2IrComponents>): Fir2IrResult {
         if (_scopeSession == null) runResolution()
         val mangler = JvmDescriptorMangler(null)
         val signaturer = JvmIdSignatureDescriptor(mangler)
@@ -124,7 +125,8 @@ class FirAnalyzerFacade(
             FirJvmVisibilityConverter,
             Fir2IrJvmSpecialAnnotationSymbolProvider(),
             irGeneratorExtensions,
-            generateSignatures
+            generateSignatures,
+            dependentComponents
         )
     }
 }

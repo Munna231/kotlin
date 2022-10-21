@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM
 import org.jetbrains.kotlin.codegen.ClassBuilderFactories
 import org.jetbrains.kotlin.codegen.state.GenerationState
 import org.jetbrains.kotlin.container.get
+import org.jetbrains.kotlin.fir.backend.Fir2IrComponents
 import org.jetbrains.kotlin.fir.backend.jvm.FirJvmBackendClassResolver
 import org.jetbrains.kotlin.fir.backend.jvm.FirJvmBackendExtension
 import org.jetbrains.kotlin.fir.backend.jvm.JvmFir2IrExtensions
@@ -22,12 +23,11 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.CompilerEnvironment
 import org.jetbrains.kotlin.resolve.lazy.declarations.FileBasedDeclarationProviderFactory
 import org.jetbrains.kotlin.test.backend.ir.IrBackendInput
-import org.jetbrains.kotlin.test.model.BackendKinds
-import org.jetbrains.kotlin.test.model.Frontend2BackendConverter
-import org.jetbrains.kotlin.test.model.FrontendKinds
-import org.jetbrains.kotlin.test.model.TestModule
+import org.jetbrains.kotlin.test.backend.ir.KLibArtifact
+import org.jetbrains.kotlin.test.model.*
 import org.jetbrains.kotlin.test.services.TestServices
 import org.jetbrains.kotlin.test.services.compilerConfigurationProvider
+import org.jetbrains.kotlin.test.services.dependencyProvider
 
 class Fir2IrResultsConverter(
     testServices: TestServices
@@ -43,8 +43,18 @@ class Fir2IrResultsConverter(
         val compilerConfigurationProvider = testServices.compilerConfigurationProvider
         val configuration = compilerConfigurationProvider.getCompilerConfiguration(module)
 
+        val dependencyProvider = testServices.dependencyProvider
+        val dependentComponents = mutableListOf<Fir2IrComponents>()
+        for (dependency in module.dependsOnDependencies) {
+            val testModule = dependencyProvider.getTestModule(dependency.moduleName)
+            val artifact = dependencyProvider.getArtifact(testModule, KLibKinds.KLib)
+            if (artifact is KLibArtifact.JvmIrKLibArtifact) {
+                artifact.components?.let { dependentComponents.add(it) }
+            }
+        }
+
         val fir2IrExtensions = JvmFir2IrExtensions(configuration, JvmIrDeserializerImpl(), JvmIrMangler)
-        val (irModuleFragment, components) = inputArtifact.firAnalyzerFacade.convertToIr(fir2IrExtensions)
+        val (irModuleFragment, components) = inputArtifact.firAnalyzerFacade.convertToIr(fir2IrExtensions, dependentComponents)
         val dummyBindingContext = NoScopeRecordCliBindingTrace().bindingContext
 
         val phaseConfig = configuration.get(CLIConfigurationKeys.PHASE_CONFIG)
@@ -84,6 +94,7 @@ class Fir2IrResultsConverter(
                 FirJvmBackendExtension(inputArtifact.session, components),
                 notifyCodegenStart = {},
             ),
+            components,
             sourceFiles
         )
     }

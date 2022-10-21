@@ -7,9 +7,9 @@ package org.jetbrains.kotlin.test.backend.ir
 
 import org.jetbrains.kotlin.KtSourceFile
 import org.jetbrains.kotlin.backend.jvm.JvmIrCodegenFactory
-import org.jetbrains.kotlin.codegen.CodegenFactory
 import org.jetbrains.kotlin.codegen.state.GenerationState
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
+import org.jetbrains.kotlin.fir.backend.Fir2IrComponents
 import org.jetbrains.kotlin.ir.backend.js.KotlinFileSerializedData
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.symbols.IrSymbol
@@ -37,6 +37,7 @@ sealed class IrBackendInput : ResultingArtifact.BackendInput<IrBackendInput>() {
         val state: GenerationState,
         val codegenFactory: JvmIrCodegenFactory,
         val backendInput: JvmIrCodegenFactory.JvmIrBackendInput,
+        val components: Fir2IrComponents?,
         val sourceFiles: List<KtSourceFile>
     ) : IrBackendInput() {
         override val irModuleFragment: IrModuleFragment

@@ -32367,6 +32367,12 @@ public class IrBlackBoxCodegenTestGenerated extends AbstractIrBlackBoxCodegenTes
             }
 
             @Test
+            @TestMetadata("expectActualMultiCommon.kt")
+            public void testExpectActualMultiCommon() throws Exception {
+                runTest("compiler/testData/codegen/box/multiplatform/multiModule/expectActualMultiCommon.kt");
+            }
+
+            @Test
             @TestMetadata("expectActualSimple.kt")
             public void testExpectActualSimple() throws Exception {
                 runTest("compiler/testData/codegen/box/multiplatform/multiModule/expectActualSimple.kt");

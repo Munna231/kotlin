@@ -65,6 +65,7 @@ class ClassicFrontend2IrConverter(
             state,
             codegenFactory,
             codegenFactory.convertToIr(CodegenFactory.IrConversionInput.fromGenerationStateAndFiles(state, psiFiles.values)),
+            null,
             emptyList()
         )
     }

@@ -18,13 +18,14 @@ class KLibGenerator(
         return true
     }
 
-    override fun transform(module: TestModule, inputArtifact: IrBackendInput): KLibArtifact? {
+    override fun transform(module: TestModule, inputArtifact: IrBackendInput): KLibArtifact {
         return when (inputArtifact) {
             is IrBackendInput.JsIrBackendInput -> TODO()
             is IrBackendInput.JvmIrBackendInput -> KLibArtifact.JvmIrKLibArtifact(
                 inputArtifact.state,
                 inputArtifact.codegenFactory,
                 inputArtifact.backendInput,
+                inputArtifact.components,
                 inputArtifact.sourceFiles
             )
         }

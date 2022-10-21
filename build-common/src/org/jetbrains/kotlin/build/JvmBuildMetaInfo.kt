@@ -57,6 +57,7 @@ class JvmBuildMetaInfo : BuildMetaInfo() {
             "defaultScriptExtension",
             "enableDebugMode",
             "expression",
+            "internalArguments",
             "profileCompilerCommand",
             "repeatCompileModules",
             "scriptResolverEnvironment",

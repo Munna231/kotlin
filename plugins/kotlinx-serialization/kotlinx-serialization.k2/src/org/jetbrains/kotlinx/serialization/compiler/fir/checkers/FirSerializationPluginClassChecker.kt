@@ -10,7 +10,7 @@ import org.jetbrains.kotlin.config.KotlinCompilerVersion
 import org.jetbrains.kotlin.diagnostics.*
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirClassChecker
-import org.jetbrains.kotlin.fir.analysis.checkers.isInlineClass
+import org.jetbrains.kotlin.fir.analysis.checkers.isValueClass
 import org.jetbrains.kotlin.fir.analysis.checkers.toRegularClassSymbol
 import org.jetbrains.kotlin.fir.declarations.*
 import org.jetbrains.kotlin.fir.declarations.utils.*
@@ -466,7 +466,7 @@ object FirSerializationPluginClassChecker : FirClassChecker() {
     context(CheckerContext)
     @Suppress("IncorrectFormatting") // KTIJ-22227
     private val ConeKotlinType.isUnsupportedInlineType: Boolean
-        get() = isInlineClass(session) && !isPrimitiveOrNullablePrimitive
+        get() = isValueClass(session) && !isPrimitiveOrNullablePrimitive
 
     context(CheckerContext)
     @Suppress("IncorrectFormatting") // KTIJ-22227

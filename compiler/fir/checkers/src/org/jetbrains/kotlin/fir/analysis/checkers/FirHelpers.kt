@@ -94,7 +94,7 @@ fun FirClassSymbol<*>.isSupertypeOf(other: FirClassSymbol<*>, session: FirSessio
     return isSupertypeOf(other, mutableSetOf())
 }
 
-fun ConeKotlinType.isInlineClass(session: FirSession): Boolean = toRegularClassSymbol(session)?.isInline == true
+fun ConeKotlinType.isValueClass(session: FirSession): Boolean = toRegularClassSymbol(session)?.isInline == true
 
 /**
  * Returns the FirRegularClass associated with this

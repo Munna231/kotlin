@@ -42,7 +42,7 @@ open class FirDependenciesSymbolProviderImpl(session: FirSession) : FirDependenc
                 is FirCompositeSymbolProvider -> it.providers
                 else -> listOf(it)
             }
-        }
+        }.filter { it !is FirDependenciesSymbolProvider }
     }
 
     @OptIn(FirSymbolProviderInternals::class, ExperimentalStdlibApi::class)

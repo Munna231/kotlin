@@ -213,7 +213,7 @@ object JsExportDeclarationChecker : DeclarationChecker {
 
         val name = declarationDescriptor.getKotlinOrJsName()
 
-        if (name in SPECIAL_KEYWORDS || name !in RESERVED_KEYWORDS && NameSuggestion.sanitizeName(name) == name) return
+        if (name in SPECIAL_KEYWORDS || (name !in RESERVED_KEYWORDS && NameSuggestion.sanitizeName(name) == name)) return
 
         val reportTarget = declarationDescriptor.getJsNameArgument() ?: declaration.getIdentifier()
 
